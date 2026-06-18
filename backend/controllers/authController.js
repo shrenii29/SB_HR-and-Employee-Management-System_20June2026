@@ -1,73 +1,139 @@
-const db = require('../config/db');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const bcrypt   = require('bcryptjs');
+const jwt      = require('jsonwebtoken');
+const db       = require('../config/db');
+const { asyncHandler, createError } = require('../middleware/errorHandler');
 
-// @desc    Register a new user (Admin or Employee)
-// @route   POST /api/auth/register
-const register = async (req, res) => {
-    try {
-        const { first_name, last_name, email, password, role } = req.body;
+/* ─── helpers ─────────────────────────────────────────────── */
 
-        // 1. Check if user already exists
-        const [existingUsers] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-        if (existingUsers.length > 0) {
-            return res.status(400).json({ message: 'User with this email already exists.' });
-        }
+const signAccess   = (payload) =>
+  jwt.sign(payload, process.env.JWT_SECRET,         { expiresIn: process.env.JWT_EXPIRES_IN         || '15m' });
 
-        // 2. Hash the password securely
-        const salt = await bcrypt.genSalt(10);
-        const password_hash = await bcrypt.hash(password, salt);
+const signRefresh  = (payload) =>
+  jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'  });
 
-        // 3. Insert new user into the database
-        const userRole = role === 'Admin' ? 'Admin' : 'Employee'; // Default to Employee if invalid
-        const [result] = await db.query(
-            'INSERT INTO users (first_name, last_name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
-            [first_name, last_name, email, password_hash, userRole]
-        );
+/* ─── login ───────────────────────────────────────────────── */
 
-        res.status(201).json({ message: 'User registered successfully!', userId: result.insertId });
-    } catch (error) {
-        console.error('Registration Error:', error);
-        res.status(500).json({ message: 'Server error during registration.' });
-    }
-};
+exports.login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) throw createError('Email and password are required', 400);
 
-// @desc    Authenticate user & get token
-// @route   POST /api/auth/login
-const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+  const [rows] = await db.query(
+    `SELECT u.*, e.id AS employee_id
+     FROM users u
+     LEFT JOIN employees e ON e.user_id = u.id
+     WHERE u.email = ? AND u.is_active = 1`,
+    [email.toLowerCase().trim()],
+  );
 
-        // 1. Find the user by email
-        const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-        if (users.length === 0) {
-            return res.status(401).json({ message: 'Invalid email or password.' });
-        }
+  const user = rows[0];
+  if (!user) throw createError('Invalid credentials', 401);
 
-        const user = users[0];
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) throw createError('Invalid credentials', 401);
 
-        // 2. Compare the provided password with the hashed password in DB
-        const isMatch = await bcrypt.compare(password, user.password_hash);
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid email or password.' });
-        }
+  const payload = {
+    id:         user.id,
+    email:      user.email,
+    role:       user.role,
+    employeeId: user.employee_id,
+  };
 
-        // 3. Generate a JWT Token
-        const token = jwt.sign(
-            { id: user.id, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: '8h' } // Token expires in 8 hours
-        );
+  const accessToken  = signAccess(payload);
+  const refreshToken = signRefresh({ id: user.id });
 
-        res.status(200).json({
-            message: 'Login successful',
-            token,
-            user: { id: user.id, first_name: user.first_name, role: user.role }
-        });
-    } catch (error) {
-        console.error('Login Error:', error);
-        res.status(500).json({ message: 'Server error during login.' });
-    }
-};
+  // Persist refresh token (single-device; replace to support multi-device)
+  await db.query('UPDATE users SET refresh_token = ? WHERE id = ?', [refreshToken, user.id]);
 
-module.exports = { register, login };
+  res.json({
+    success: true,
+    message: 'Login successful',
+    data: {
+      accessToken,
+      refreshToken,
+      user: {
+        id:         user.id,
+        email:      user.email,
+        role:       user.role,
+        employeeId: user.employee_id,
+      },
+    },
+  });
+});
+
+/* ─── refresh token ───────────────────────────────────────── */
+
+exports.refreshToken = asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) throw createError('Refresh token required', 401);
+
+  let decoded;
+  try {
+    decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+  } catch {
+    throw createError('Invalid or expired refresh token', 401);
+  }
+
+  const [rows] = await db.query(
+    `SELECT u.*, e.id AS employee_id
+     FROM users u
+     LEFT JOIN employees e ON e.user_id = u.id
+     WHERE u.id = ? AND u.refresh_token = ? AND u.is_active = 1`,
+    [decoded.id, refreshToken],
+  );
+
+  if (!rows[0]) throw createError('Invalid refresh token', 401);
+
+  const user = rows[0];
+  const payload = { id: user.id, email: user.email, role: user.role, employeeId: user.employee_id };
+  const newAccess  = signAccess(payload);
+  const newRefresh = signRefresh({ id: user.id });
+
+  await db.query('UPDATE users SET refresh_token = ? WHERE id = ?', [newRefresh, user.id]);
+
+  res.json({ success: true, data: { accessToken: newAccess, refreshToken: newRefresh } });
+});
+
+/* ─── logout ──────────────────────────────────────────────── */
+
+exports.logout = asyncHandler(async (req, res) => {
+  await db.query('UPDATE users SET refresh_token = NULL WHERE id = ?', [req.user.id]);
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
+/* ─── get current user profile ────────────────────────────── */
+
+exports.getMe = asyncHandler(async (req, res) => {
+  const [rows] = await db.query(
+    `SELECT u.id, u.email, u.role, u.is_active, u.created_at,
+            e.id AS employee_id, e.employee_code, e.first_name, e.last_name,
+            e.phone, e.designation, e.profile_image,
+            d.name AS department
+     FROM users u
+     LEFT JOIN employees e ON e.user_id = u.id
+     LEFT JOIN departments d ON d.id = e.department_id
+     WHERE u.id = ?`,
+    [req.user.id],
+  );
+  if (!rows[0]) throw createError('User not found', 404);
+  res.json({ success: true, data: rows[0] });
+});
+
+/* ─── change password ─────────────────────────────────────── */
+
+exports.changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) throw createError('Both current and new password are required');
+  if (newPassword.length < 6) throw createError('New password must be at least 6 characters');
+
+  const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [req.user.id]);
+  const user = rows[0];
+  if (!user) throw createError('User not found', 404);
+
+  const valid = await bcrypt.compare(currentPassword, user.password);
+  if (!valid) throw createError('Current password is incorrect', 400);
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await db.query('UPDATE users SET password = ? WHERE id = ?', [hashed, req.user.id]);
+
+  res.json({ success: true, message: 'Password updated successfully' });
+});

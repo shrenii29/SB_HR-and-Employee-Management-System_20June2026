@@ -1,18 +1,13 @@
-const express = require('express');
-const router = express.Router();
-const { getAllEmployees, updateEmployee, deleteEmployee } = require('../controllers/employeeController');
-const { verifyAdmin } = require('../middleware/authMiddleware');
+const router = require('express').Router();
+const ctrl   = require('../controllers/employeeController');
+const { authenticate, authorize } = require('../middleware/auth');
 
-// All routes below this line are protected by the verifyAdmin middleware
-router.use(verifyAdmin);
+router.use(authenticate);
 
-// Route: GET /api/employees
-router.get('/', getAllEmployees);
-
-// Route: PUT /api/employees/:id
-router.put('/:id', updateEmployee);
-
-// Route: DELETE /api/employees/:id
-router.delete('/:id', deleteEmployee);
+router.get('/', authorize('admin'), ctrl.getAllEmployees);
+router.post('/', authorize('admin'), ctrl.createEmployee);
+router.get('/:id', authorize('admin','employee'), ctrl.getEmployee);
+router.put('/:id', authorize('admin','employee'), ctrl.updateEmployee);
+router.delete('/:id', authorize('admin'), ctrl.deleteEmployee);
 
 module.exports = router;

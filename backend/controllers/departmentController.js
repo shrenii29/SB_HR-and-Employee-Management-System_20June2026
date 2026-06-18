@@ -1,62 +1,84 @@
 const db = require('../config/db');
+const { asyncHandler, createError } = require('../middleware/errorHandler');
 
-// @desc    Get all departments
-// @route   GET /api/departments
-const getAllDepartments = async (req, res) => {
-    try {
-        const [departments] = await db.query('SELECT * FROM departments ORDER BY name ASC');
-        res.status(200).json(departments);
-    } catch (error) {
-        console.error('Error fetching departments:', error);
-        res.status(500).json({ message: 'Server error fetching departments.' });
-    }
-};
+/* GET all departments */
+exports.getAllDepartments = asyncHandler(async (req, res) => {
+  const [rows] = await db.query(
+    `SELECT d.*, COUNT(e.id) AS employee_count
+     FROM departments d
+     LEFT JOIN employees e ON e.department_id = d.id
+     GROUP BY d.id
+     ORDER BY d.name`,
+  );
+  res.json({ success: true, data: rows });
+});
 
-// @desc    Create a new department
-// @route   POST /api/departments
-const createDepartment = async (req, res) => {
-    try {
-        const { name } = req.body;
+/* GET single department with employees */
+exports.getDepartment = asyncHandler(async (req, res) => {
+  const [dept] = await db.query('SELECT * FROM departments WHERE id = ?', [req.params.id]);
+  if (!dept[0]) throw createError('Department not found', 404);
 
-        if (!name) {
-            return res.status(400).json({ message: 'Department name is required.' });
-        }
+  const [employees] = await db.query(
+    `SELECT e.id, e.employee_code, e.first_name, e.last_name, e.designation
+     FROM employees e WHERE e.department_id = ?`,
+    [req.params.id],
+  );
 
-        const [result] = await db.query('INSERT INTO departments (name) VALUES (?)', [name]);
-        
-        res.status(201).json({ message: 'Department created successfully.', departmentId: result.insertId });
-    } catch (error) {
-        // Handle duplicate name errors
-        if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ message: 'Department already exists.' });
-        }
-        console.error('Error creating department:', error);
-        res.status(500).json({ message: 'Server error creating department.' });
-    }
-};
+  res.json({ success: true, data: { ...dept[0], employees } });
+});
 
-// @desc    Rename a department
-// @route   PUT /api/departments/:id
-const updateDepartment = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name } = req.body;
+/* CREATE department */
+exports.createDepartment = asyncHandler(async (req, res) => {
+  const { name, description } = req.body;
+  if (!name?.trim()) throw createError('Department name is required');
 
-        if (!name) {
-            return res.status(400).json({ message: 'New department name is required.' });
-        }
+  const [result] = await db.query(
+    'INSERT INTO departments (name, description) VALUES (?, ?)',
+    [name.trim(), description?.trim() || null],
+  );
 
-        const [result] = await db.query('UPDATE departments SET name = ? WHERE id = ?', [name, id]);
+  res.status(201).json({
+    success: true,
+    message: 'Department created',
+    data: { id: result.insertId, name, description },
+  });
+});
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Department not found.' });
-        }
+/* UPDATE department */
+exports.updateDepartment = asyncHandler(async (req, res) => {
+  const { name, description } = req.body;
+  const [existing] = await db.query('SELECT * FROM departments WHERE id = ?', [req.params.id]);
+  if (!existing[0]) throw createError('Department not found', 404);
 
-        res.status(200).json({ message: 'Department renamed successfully.' });
-    } catch (error) {
-        console.error('Error renaming department:', error);
-        res.status(500).json({ message: 'Server error renaming department.' });
-    }
-};
+  await db.query(
+    'UPDATE departments SET name = ?, description = ? WHERE id = ?',
+    [name?.trim() || existing[0].name, description ?? existing[0].description, req.params.id],
+  );
 
-module.exports = { getAllDepartments, createDepartment, updateDepartment };
+  res.json({ success: true, message: 'Department updated' });
+});
+
+/* DELETE department */
+exports.deleteDepartment = asyncHandler(async (req, res) => {
+  const [existing] = await db.query('SELECT id FROM departments WHERE id = ?', [req.params.id]);
+  if (!existing[0]) throw createError('Department not found', 404);
+
+  // Unassign employees first (SET NULL via FK already handles this)
+  await db.query('DELETE FROM departments WHERE id = ?', [req.params.id]);
+  res.json({ success: true, message: 'Department deleted' });
+});
+
+/* Assign employee to department */
+exports.assignEmployee = asyncHandler(async (req, res) => {
+  const { department_id: deptId } = req.params;
+  const { employee_id } = req.body;
+
+  const [dept] = await db.query('SELECT id FROM departments WHERE id = ?', [deptId]);
+  if (!dept[0]) throw createError('Department not found', 404);
+
+  const [emp] = await db.query('SELECT id FROM employees WHERE id = ?', [employee_id]);
+  if (!emp[0]) throw createError('Employee not found', 404);
+
+  await db.query('UPDATE employees SET department_id = ? WHERE id = ?', [deptId, employee_id]);
+  res.json({ success: true, message: 'Employee assigned to department' });
+});

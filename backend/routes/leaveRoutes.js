@@ -1,14 +1,14 @@
-const express = require('express');
-const router = express.Router();
-const { applyForLeave, getMyLeaves, getAllLeaves, updateLeaveStatus } = require('../controllers/leaveController');
-const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware');
+const router = require('express').Router();
+const ctrl   = require('../controllers/leaveController');
+const { authenticate, authorize } = require('../middleware/auth');
 
-// === Employee Routes (Requires just a valid login token) ===
-router.post('/apply', verifyToken, applyForLeave);
-router.get('/my-leaves', verifyToken, getMyLeaves);
+router.use(authenticate);
 
-// === Admin Routes (Requires Admin privileges) ===
-router.get('/', verifyAdmin, getAllLeaves);
-router.put('/:id/status', verifyAdmin, updateLeaveStatus);
+router.get('/types', authorize('admin','employee'), ctrl.getLeaveTypes);
+router.get('/', authorize('admin','employee'), ctrl.getLeaveRequests);
+router.post('/', authorize('employee'), ctrl.applyLeave);
+router.get('/:id', authorize('admin','employee'), ctrl.getLeaveRequest);
+router.patch('/:id/review', authorize('admin'), ctrl.reviewLeave);
+router.delete('/:id', authorize('employee'), ctrl.cancelLeave);
 
 module.exports = router;

@@ -1,42 +1,36 @@
-const express = require('express');
-const cors = require('cors');
 require('dotenv').config();
+require('./src/config/db'); // validates DB connection at startup
 
-// Import database connection
-require('./config/db');
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/employees', require('./routes/employeeRoutes'));
+app.use('/api/departments', require('./routes/departmentRoutes'));
+app.use('/api/leaves', require('./routes/leaveRoutes'));
+app.use('/api/attendance', require('./routes/attendanceRoutes'));
+app.use('/api/payroll', require('./routes/payrollRoutes'));
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
 
 
-// === Route Imports ===
-const authRoutes = require('./routes/authRoutes');
-const employeeRoutes = require('./routes/employeeRoutes');
-const departmentRoutes = require('./routes/departmentRoutes');
-const leaveRoutes = require('./routes/leaveRoutes');
-const attendanceRoutes = require('./routes/attendanceRoutes');
-const payrollRoutes = require('./routes/payrollRoutes'); // NEW
-const dashboardRoutes = require('./routes/dashboardRoutes'); // NEW
+const app  = require('./src/app');
+const PORT = process.env.PORT || 5000;
 
-// === Mount Routes ===
-app.use('/api/auth', authRoutes);
-app.use('/api/employees', employeeRoutes);
-app.use('/api/departments', departmentRoutes);
-app.use('/api/leaves', leaveRoutes);
-app.use('/api/attendance', attendanceRoutes);
-app.use('/api/payroll', payrollRoutes); // NEW
-app.use('/api/dashboard', dashboardRoutes); // NEW
-
-// Basic test route
-app.get('/', (req, res) => {
-    res.send('HR Management API is running...');
+const server = app.listen(PORT, () => {
+  console.log(`🚀  HR Management API running on http://localhost:${PORT}`);
+  console.log(`    Environment : ${process.env.NODE_ENV || 'development'}`);
 });
 
-// Server initialization
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// Graceful shutdown
+const shutdown = (signal) => {
+  console.log(`\n${signal} received. Shutting down gracefully…`);
+  server.close(() => {
+    console.log('HTTP server closed.');
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
 });

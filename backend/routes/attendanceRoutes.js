@@ -1,13 +1,15 @@
-const express = require('express');
-const router = express.Router();
-const { markAttendance, getMyAttendance, getAllAttendance } = require('../controllers/attendanceController');
-const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware');
+const router = require('express').Router();
+const ctrl   = require('../controllers/attendanceController');
+const { authenticate, authorize } = require('../middleware/auth');
 
-// === Employee Routes ===
-router.post('/mark', verifyToken, markAttendance);
-router.get('/my-attendance', verifyToken, getMyAttendance);
+router.use(authenticate);
 
-// === Admin Routes ===
-router.get('/', verifyAdmin, getAllAttendance);
+router.get('/', authorize('admin','employee'), ctrl.getAttendance);
+router.get('/summary', authorize('admin','employee'), ctrl.getAttendanceSummary);
+router.post('/', authorize('admin'), ctrl.markAttendance);
+router.post('/bulk', authorize('admin'), ctrl.bulkMarkAttendance);
+router.post('/check-in', authorize('employee'), ctrl.checkIn);
+router.post('/check-out', authorize('employee'), ctrl.checkOut);
+router.delete('/:id', authorize('admin'), ctrl.deleteAttendance);
 
 module.exports = router;

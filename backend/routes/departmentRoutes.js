@@ -1,13 +1,14 @@
-const express = require('express');
-const router = express.Router();
-const { getAllDepartments, createDepartment, updateDepartment } = require('../controllers/departmentController');
-const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware');
+const router = require('express').Router();
+const ctrl   = require('../controllers/departmentController');
+const { authenticate, authorize } = require('../middleware/auth');
 
-// Get all departments (Both Admins and Employees should be able to see departments)
-router.get('/', verifyToken, getAllDepartments);
+router.use(authenticate);
 
-// Create and rename departments (Strictly Admin only)
-router.post('/', verifyAdmin, createDepartment);
-router.put('/:id', verifyAdmin, updateDepartment);
+router.get('/', authorize('admin','employee'), ctrl.getAllDepartments);
+router.post('/', authorize('admin'), ctrl.createDepartment);
+router.get('/:id', authorize('admin','employee'), ctrl.getDepartment);
+router.put('/:id', authorize('admin'), ctrl.updateDepartment);
+router.delete('/:id', authorize('admin'), ctrl.deleteDepartment);
+router.post('/:department_id/assign', authorize('admin'), ctrl.assignEmployee);
 
 module.exports = router;
