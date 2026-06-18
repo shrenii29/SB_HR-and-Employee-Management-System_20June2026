@@ -11,14 +11,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
 // === Route Imports ===
 const authRoutes = require('./routes/authRoutes');
-const employeeRoutes = require('./routes/employeeRoutes'); // NEW
-const departmentRoutes = require('./routes/departmentRoutes'); // NEW
+const employeeRoutes = require('./routes/employeeRoutes');
+const departmentRoutes = require('./routes/departmentRoutes');
+const leaveRoutes = require('./routes/leaveRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
+const payrollRoutes = require('./routes/payrollRoutes'); // NEW
+const dashboardRoutes = require('./routes/dashboardRoutes'); // NEW
+
 // === Mount Routes ===
 app.use('/api/auth', authRoutes);
-app.use('/api/employees', employeeRoutes); 
-app.use('/api/departments', departmentRoutes); // NEW
+app.use('/api/employees', employeeRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/leaves', leaveRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/payroll', payrollRoutes); // NEW
+app.use('/api/dashboard', dashboardRoutes); // NEW
 
 // Basic test route
 app.get('/', (req, res) => {
