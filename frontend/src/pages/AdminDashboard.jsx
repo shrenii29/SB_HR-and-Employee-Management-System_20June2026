@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, NavLink, Outlet } from 'react-router-dom';
 import { 
   Users, Building2, CalendarOff, ClipboardCheck, 
-  CreditCard, LogOut, LayoutDashboard 
+  CreditCard, LogOut, LayoutDashboard // <-- CreditCard icon is imported here
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -26,12 +26,11 @@ const AdminDashboard = () => {
     navigate('/');
   };
 
-  // --- NEW: Dynamic Styling Function ---
   const navLinkClasses = ({ isActive }) => 
     `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${
       isActive 
-        ? 'bg-blue-600 text-white shadow-md' // Active state 
-        : 'text-slate-300 hover:bg-slate-800 hover:text-white' // Inactive state
+        ? 'bg-blue-600 text-white shadow-md' 
+        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
     }`;
 
   if (!user) return null;
@@ -47,28 +46,35 @@ const AdminDashboard = () => {
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          {/* Note the use of NavLink and the "end" attribute so it only highlights on exact match */}
           <NavLink to="/admin" end className={navLinkClasses}>
             <LayoutDashboard size={20} />
             <span>Overview</span>
           </NavLink>
+          
           <NavLink to="/admin/employees" className={navLinkClasses}>
             <Users size={20} />
             <span>Employees</span>
           </NavLink>
+          
           <NavLink to="/admin/departments" className={navLinkClasses}>
             <Building2 size={20} />
             <span>Departments</span>
           </NavLink>
           
-          {/* Placeholders for future features */}
           <NavLink to="/admin/leaves" className={navLinkClasses}>
             <CalendarOff size={20} />
             <span>Leave Requests</span>
           </NavLink>
+          
           <NavLink to="/admin/attendance" className={navLinkClasses}>
             <ClipboardCheck size={20} />
             <span>Attendance</span>
+          </NavLink>
+
+          {/* --- NEW: Payroll Link Added Here --- */}
+          <NavLink to="/admin/payroll" className={navLinkClasses}>
+            <CreditCard size={20} />
+            <span>Payroll</span>
           </NavLink>
         </nav>
 
@@ -92,10 +98,12 @@ const AdminDashboard = () => {
         </div>
       </aside>
 
+      {/* Main Dynamic Content Area */}
       <main className="flex flex-col flex-1 overflow-hidden">
         <header className="flex items-center justify-between p-6 bg-white border-b border-gray-200 shadow-sm">
           <h1 className="text-2xl font-bold text-gray-800">Admin Portal</h1>
         </header>
+        
         <div className="flex-1 p-8 overflow-y-auto">
           <Outlet />
         </div>
