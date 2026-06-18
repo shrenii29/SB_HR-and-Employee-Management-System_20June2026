@@ -1,20 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, NavLink, Outlet } from 'react-router-dom';
 import { 
-  Users, 
-  Building2, 
-  CalendarOff, 
-  ClipboardCheck, 
-  CreditCard, 
-  LogOut, 
-  LayoutDashboard 
+  Users, Building2, CalendarOff, ClipboardCheck, 
+  CreditCard, LogOut, LayoutDashboard 
 } from 'lucide-react';
 
 const AdminDashboard = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // Check authentication on load
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -32,48 +26,55 @@ const AdminDashboard = () => {
     navigate('/');
   };
 
-  if (!user) return null; // Prevent flicker before redirect
+  // --- NEW: Dynamic Styling Function ---
+  const navLinkClasses = ({ isActive }) => 
+    `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${
+      isActive 
+        ? 'bg-blue-600 text-white shadow-md' // Active state 
+        : 'text-slate-300 hover:bg-slate-800 hover:text-white' // Inactive state
+    }`;
+
+  if (!user) return null;
 
   return (
     <div className="flex h-screen bg-gray-100 font-sans">
       
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white flex flex-col shadow-xl hidden md:flex">
+      {/* Fixed Sidebar */}
+      <aside className="w-64 flex flex-col shadow-xl bg-slate-900 text-white hidden md:flex">
         <div className="p-6 border-b border-slate-700">
           <h2 className="text-2xl font-bold tracking-wider text-blue-400">HR PORTAL</h2>
-          <p className="text-sm text-slate-400 mt-1">Admin Workspace</p>
+          <p className="mt-1 text-sm text-slate-400">Admin Workspace</p>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          <a href="#" className="flex items-center gap-3 px-4 py-3 text-blue-400 bg-slate-800 rounded-lg transition-colors">
+          {/* Note the use of NavLink and the "end" attribute so it only highlights on exact match */}
+          <NavLink to="/admin" end className={navLinkClasses}>
             <LayoutDashboard size={20} />
-            <span className="font-medium">Overview</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition-colors">
+            <span>Overview</span>
+          </NavLink>
+          <NavLink to="/admin/employees" className={navLinkClasses}>
             <Users size={20} />
-            <span className="font-medium">Employees</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition-colors">
+            <span>Employees</span>
+          </NavLink>
+          <NavLink to="/admin/departments" className={navLinkClasses}>
             <Building2 size={20} />
-            <span className="font-medium">Departments</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition-colors">
+            <span>Departments</span>
+          </NavLink>
+          
+          {/* Placeholders for future features */}
+          <NavLink to="/admin/leaves" className={navLinkClasses}>
             <CalendarOff size={20} />
-            <span className="font-medium">Leave Requests</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition-colors">
+            <span>Leave Requests</span>
+          </NavLink>
+          <NavLink to="/admin/attendance" className={navLinkClasses}>
             <ClipboardCheck size={20} />
-            <span className="font-medium">Attendance</span>
-          </a>
-          <a href="#" className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition-colors">
-            <CreditCard size={20} />
-            <span className="font-medium">Payroll</span>
-          </a>
+            <span>Attendance</span>
+          </NavLink>
         </nav>
 
         <div className="p-4 border-t border-slate-700">
           <div className="flex items-center gap-3 px-4 py-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-bold">
+            <div className="flex items-center justify-center w-8 h-8 font-bold bg-blue-600 rounded-full">
               {user.first_name.charAt(0)}
             </div>
             <div>
@@ -83,7 +84,7 @@ const AdminDashboard = () => {
           </div>
           <button 
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-slate-800 rounded-lg transition-colors"
+            className="flex items-center w-full gap-3 px-4 py-2 text-red-400 transition-colors rounded-lg hover:bg-slate-800"
           >
             <LogOut size={20} />
             <span className="font-medium">Log Out</span>
@@ -91,25 +92,12 @@ const AdminDashboard = () => {
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white shadow-sm border-b border-gray-200 p-6 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
+      <main className="flex flex-col flex-1 overflow-hidden">
+        <header className="flex items-center justify-between p-6 bg-white border-b border-gray-200 shadow-sm">
+          <h1 className="text-2xl font-bold text-gray-800">Admin Portal</h1>
         </header>
-        
-        <div className="flex-1 overflow-y-auto p-8">
-          {/* We will inject the Analytics Cards here in the next step */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-32 border-dashed border-2 border-gray-300">
-               <p className="text-gray-500 font-medium">Total Employees Card</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-32 border-dashed border-2 border-gray-300">
-               <p className="text-gray-500 font-medium">Total Departments Card</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-32 border-dashed border-2 border-gray-300">
-               <p className="text-gray-500 font-medium">Pending Leaves Card</p>
-            </div>
-          </div>
+        <div className="flex-1 p-8 overflow-y-auto">
+          <Outlet />
         </div>
       </main>
 

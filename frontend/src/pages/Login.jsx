@@ -25,8 +25,9 @@ const Login = () => {
       localStorage.setItem('user', JSON.stringify(response.data.user));
 
       // Route the user based on their role
+      // Route the user based on their role
       if (response.data.user.role === 'Admin') {
-        navigate('/admin-dashboard');
+        navigate('/admin'); // Changed from '/admin-dashboard'
       } else {
         navigate('/employee-dashboard');
       }
