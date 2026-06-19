@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { generatePayroll, getMyPayroll } = require('../controllers/payrollController');
+const { generatePayroll, getMyPayroll, getAllPayroll } = require('../controllers/payrollController');
 const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware');
 
-router.post('/', verifyAdmin, generatePayroll);
+router.get('/', verifyToken, verifyAdmin, getAllPayroll);
 router.get('/my-payroll', verifyToken, getMyPayroll);
 
+
+router.post('/', verifyAdmin, generatePayroll);
 module.exports = router;

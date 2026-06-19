@@ -11,10 +11,20 @@ const generatePayroll = async (req, res) => {
         }
 
         const [result] = await db.query(
-            'INSERT INTO payroll (user_id, month_year, basic_salary, allowances, deductions) VALUES (?, ?, ?, ?, ?)',
-            [user_id, month_year, basic_salary, allowances || 0, deductions || 0]
-        );
-
+  `INSERT INTO payroll (user_id, month_year, basic_salary, allowances, deductions)
+   VALUES (?, ?, ?, ?, ?)
+   ON DUPLICATE KEY UPDATE
+     basic_salary = VALUES(basic_salary),
+     allowances = VALUES(allowances),
+     deductions = VALUES(deductions)`,
+  [
+    user_id,
+    month_year, // MUST be "YYYY-MM"
+    Number(basic_salary),
+    Number(allowances || 0),
+    Number(deductions || 0)
+  ]
+);
         res.status(201).json({ message: 'Payroll record generated successfully.', payrollId: result.insertId });
     } catch (error) {
         console.error('Error generating payroll:', error);
@@ -37,4 +47,16 @@ const getMyPayroll = async (req, res) => {
     }
 };
 
-module.exports = { generatePayroll, getMyPayroll };
+const getAllPayroll = async (req, res) => {
+    try {
+        const [records] = await db.query(
+            'SELECT * FROM payroll ORDER BY id DESC'
+        );
+        res.status(200).json(records);
+    } catch (error) {
+        console.error('Error fetching all payroll:', error);
+        res.status(500).json({ message: 'Server error fetching payroll.' });
+    }
+};
+
+module.exports = { generatePayroll, getMyPayroll, getAllPayroll };

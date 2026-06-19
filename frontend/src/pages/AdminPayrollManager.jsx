@@ -29,12 +29,8 @@ const AdminPayrollManager = () => {
 
       const empRes = await axios.get(`${import.meta.env.VITE_API_URL}/employees`, { headers });
       
-      try {
-        const payRes = await axios.get(`${import.meta.env.VITE_API_URL}/payroll`, { headers });
-        setPayrollData(payRes.data);
-      } catch (e) {
-        setPayrollData([]); 
-      }
+      const payRes = await axios.get(`${import.meta.env.VITE_API_URL}/payroll`, { headers });
+setPayrollData(payRes.data);
 
       setEmployees(empRes.data);
     } catch (err) {
@@ -48,10 +44,15 @@ const AdminPayrollManager = () => {
     fetchData();
   }, [fetchData]);
 
-  const getEmployeePayroll = (empId) => {
-    const record = payrollData.find(p => p.user_id === empId || p.employee_id === empId);
-    return record || { basic_salary: 0, allowances: 0, deductions: 0 };
-  };
+const getEmployeePayroll = (empId) => {
+  const records = payrollData.filter(p => p.user_id === empId);
+
+  const latest = records.sort((a, b) => {
+    return b.month_year.localeCompare(a.month_year);
+  })[0];
+
+  return latest || { basic_salary: 0, allowances: 0, deductions: 0 };
+};
 
   const calculateNetPay = (basic, allowances, deductions) => {
     return (Number(basic || 0) + Number(allowances || 0)) - Number(deductions || 0);
@@ -102,17 +103,6 @@ const AdminPayrollManager = () => {
       deductions: Number(formData.deductions)
     };
 
-    // --- 2. NEW: OPTIMISTIC UI UPDATE ---
-    // Instantly update the React table so the user sees the math change instantly!
-    setPayrollData(prevData => {
-      const existingIndex = prevData.findIndex(p => p.user_id === selectedEmp.id || p.employee_id === selectedEmp.id);
-      if (existingIndex >= 0) {
-        const newData = [...prevData];
-        newData[existingIndex] = payload;
-        return newData;
-      }
-      return [...prevData, payload];
-    });
 
     setIsModalOpen(false); // Close the modal instantly for a snappy feel
 
@@ -121,7 +111,7 @@ const AdminPayrollManager = () => {
       await axios.post(`${import.meta.env.VITE_API_URL}/payroll`, payload, { 
         headers: { Authorization: `Bearer ${token}` } 
       });
-      // We don't need to call fetchData() anymore because we already updated the UI locally!
+      await fetchData();   // ← ADD THIS LINE
     } catch (err) {
       console.warn("Backend /payroll endpoint failed, but UI was updated locally.", err);
       // In a production app we would show a toast error here, but for this project 

@@ -27,7 +27,7 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/attendance', attendanceRoutes);
-app.use('/api/payroll', payrollRoutes); // NEW
+app.use('/api/payroll', payrollRoutes);
 app.use('/api/dashboard', dashboardRoutes); // NEW
 
 // Basic test route
