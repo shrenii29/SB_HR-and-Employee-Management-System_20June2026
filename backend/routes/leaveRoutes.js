@@ -1,14 +1,79 @@
 const express = require('express');
 const router = express.Router();
-const { applyForLeave, getMyLeaves, getAllLeaves, updateLeaveStatus } = require('../controllers/leaveController');
 const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware');
+const db = require('../config/db');
 
-// === Employee Routes (Requires just a valid login token) ===
-router.post('/apply', verifyToken, applyForLeave);
-router.get('/my-leaves', verifyToken, getMyLeaves);
+// 1. EMPLOYEE: Apply for Leave
+router.post('/apply', verifyToken, async (req, res) => {
+    try {
+        const { leave_type, start_date, end_date, reason } = req.body;
+        
+        // Basic validation
+        if (!leave_type || !start_date || !end_date) {
+            return res.status(400).json({ error: "Please provide leave type and dates." });
+        }
 
-// === Admin Routes (Requires Admin privileges) ===
-router.get('/', verifyAdmin, getAllLeaves);
-router.put('/:id/status', verifyAdmin, updateLeaveStatus);
+        const sql = "INSERT INTO leave_requests (user_id, leave_type, start_date, end_date, reason) VALUES (?, ?, ?, ?, ?)";
+        await db.query(sql, [req.user.id, leave_type, start_date, end_date, reason]);
+        
+        res.json({ message: "Leave request submitted successfully." });
+    } catch (err) {
+        console.error("DB Error:", err.message);
+        res.status(500).json({ error: "Failed to submit leave request." });
+    }
+});
+
+// 2. EMPLOYEE: Get My Leave History
+router.get('/my-leaves', verifyToken, async (req, res) => {
+    try {
+        const sql = "SELECT * FROM leave_requests WHERE user_id = ? ORDER BY created_at DESC";
+        const [results] = await db.query(sql, [req.user.id]);
+        res.json(results);
+    } catch (err) {
+        console.error("DB Error:", err.message);
+        res.status(500).json({ error: "Failed to fetch your leave history." });
+    }
+});
+
+// 3. ADMIN: Get ALL Leave Requests
+router.get('/all', verifyAdmin, async (req, res) => {
+    try {
+        const sql = `
+            SELECT l.*, u.first_name, u.last_name 
+            FROM leave_requests l
+            JOIN users u ON l.user_id = u.id
+            ORDER BY l.created_at DESC
+        `;
+        const [results] = await db.query(sql);
+        res.json(results);
+    } catch (err) {
+        console.error("DB Error:", err.message);
+        res.status(500).json({ error: "Failed to fetch organization leave requests." });
+    }
+});
+
+// 4. ADMIN: Update Leave Status (Approve/Reject)
+router.put('/update-status/:id', verifyAdmin, async (req, res) => {
+    try {
+        const leaveId = req.params.id;
+        const { status } = req.body; // Expects 'Approved' or 'Rejected'
+
+        if (!['Approved', 'Rejected'].includes(status)) {
+            return res.status(400).json({ error: "Invalid status update." });
+        }
+
+        const sql = "UPDATE leave_requests SET status = ? WHERE id = ?";
+        const [result] = await db.query(sql, [status, leaveId]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Leave request not found." });
+        }
+
+        res.json({ message: `Leave request ${status.toLowerCase()} successfully.` });
+    } catch (err) {
+        console.error("DB Error:", err.message);
+        res.status(500).json({ error: "Failed to update leave status." });
+    }
+});
 
 module.exports = router;

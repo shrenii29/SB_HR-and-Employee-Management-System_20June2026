@@ -15,7 +15,8 @@ import AdminPayrollManager from './pages/AdminPayrollManager';
 import EmployeeLayout from './pages/EmployeeLayout';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import AttendancePage from './pages/AttendancePage';
-
+import EmployeeLeave from './pages/EmployeeLeave';
+import EmployeePayroll from './pages/EmployeePayroll';
 
 function App() {
   return (
@@ -37,7 +38,9 @@ function App() {
         {/* NEW Employee Route */}
         <Route path="/employee-dashboard" element={<EmployeeLayout />}>
             <Route index element={<EmployeeDashboard />} /> 
-            <Route path="attendance" element={<AttendancePage />} /> {/* Add this line! */}
+            <Route path="attendance" element={<AttendancePage />} />
+            <Route path="leaves" element={<EmployeeLeave />} /> 
+            <Route path="payroll" element={<EmployeePayroll />} /> 
         </Route>
 
         {/* Catch-All */}

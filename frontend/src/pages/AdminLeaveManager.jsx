@@ -1,36 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { CalendarOff, CheckCircle, XCircle, Clock, Filter } from 'lucide-react';
+import { CalendarDays, CheckCircle, XCircle, Clock, Info } from 'lucide-react';
 
 const AdminLeaveManager = () => {
-  const [leaves, setLeaves] = useState([]);
-  const [employees, setEmployees] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState('All'); // 'All', 'Pending', 'Approved', 'Rejected'
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
-  const fetchData = useCallback(async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-
-      // Fetch both leaves and employees to map names to IDs
-      const [leaveRes, empRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL}/leaves`, { headers }),
-        axios.get(`${import.meta.env.VITE_API_URL}/employees`, { headers })
-      ]);
-
-      // Sort leaves so 'Pending' ones show up at the top automatically
-      const sortedLeaves = leaveRes.data.sort((a, b) => {
-        if (a.status === 'Pending' && b.status !== 'Pending') return -1;
-        if (a.status !== 'Pending' && b.status === 'Pending') return 1;
-        return new Date(b.created_at) - new Date(a.created_at);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/leave/all`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-
-      setLeaves(sortedLeaves);
-      setEmployees(empRes.data);
+      setRequests(res.data);
     } catch (err) {
-      setError('Failed to load leave requests. Ensure your backend /leaves endpoint is running.');
+      setError('Failed to load leave requests.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -38,82 +24,61 @@ const AdminLeaveManager = () => {
   }, []);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchRequests();
+  }, [fetchRequests]);
 
-  // Handle Approve/Reject action
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
+  };
+
   const handleUpdateStatus = async (id, newStatus) => {
-    if (!window.confirm(`Are you sure you want to ${newStatus.toLowerCase()} this request?`)) return;
-
     try {
       const token = localStorage.getItem('token');
-      // Adjust this URL to match whatever your backend PUT route is named
-      await axios.put(`${import.meta.env.VITE_API_URL}/leaves/${id}`, 
-        { status: newStatus }, 
+      await axios.put(
+        `${import.meta.env.VITE_API_URL}/leave/update-status/${id}`,
+        { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Update the UI instantly without reloading the page
-      setLeaves(leaves.map(leave => 
-        leave.id === id ? { ...leave, status: newStatus } : leave
-      ));
+      showNotification(`Request marked as ${newStatus}`);
+      fetchRequests(); // Refresh table to show new status
     } catch (err) {
-      alert(err.response?.data?.message || `Failed to ${newStatus.toLowerCase()} leave request.`);
+      showNotification("Failed to update status", 'error');
     }
   };
 
-  // Helper to get the employee's full name
-  const getEmployeeName = (empId) => {
-    const emp = employees.find(e => e.id === empId);
-    return emp ? `${emp.first_name} ${emp.last_name}` : 'Unknown Employee';
-  };
-
-  // Helper for UI styling based on status
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Approved':
-        return <span className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full"><CheckCircle size={14}/> Approved</span>;
+        return <span className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full w-fit"><CheckCircle size={14}/> Approved</span>;
       case 'Rejected':
-        return <span className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full"><XCircle size={14}/> Rejected</span>;
+        return <span className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full w-fit"><XCircle size={14}/> Rejected</span>;
       default:
-        return <span className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-yellow-700 bg-yellow-100 rounded-full"><Clock size={14}/> Pending</span>;
+        return <span className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-yellow-700 bg-yellow-100 rounded-full w-fit"><Clock size={14}/> Pending</span>;
     }
   };
 
-  // Filter the table data
-  const filteredLeaves = filter === 'All' ? leaves : leaves.filter(l => l.status === filter);
-
   return (
     <div className="space-y-6">
-      
-      {/* Page Header & Filters */}
-      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <CalendarOff className="text-orange-500" />
-            Leave Management
+          <h2 className="flex items-center gap-2 text-2xl font-bold text-gray-800">
+            <CalendarDays className="text-blue-500" />
+            Leave Requests Inbox
           </h2>
-          <p className="text-gray-500 text-sm mt-1">Review and manage employee time-off requests.</p>
+          <p className="mt-1 text-sm text-gray-500">Review and manage employee time-off requests.</p>
         </div>
-        
-        <div className="flex items-center bg-white border border-gray-200 rounded-lg shadow-sm p-1">
-          <Filter size={18} className="text-gray-400 mx-2" />
-          {['All', 'Pending', 'Approved', 'Rejected'].map(status => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                filter === status ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
+
+        {notification.show && (
+          <div className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold shadow-sm transition-all ${notification.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+            <Info size={16} />
+            {notification.message}
+          </div>
+        )}
       </div>
 
-      {/* Main Data Table */}
-      <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+      <div className="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl">
         {loading && <div className="p-8 text-center text-gray-500">Loading requests...</div>}
         {error && <div className="p-4 m-6 text-red-700 border border-red-200 rounded-lg bg-red-50">{error}</div>}
 
@@ -124,65 +89,58 @@ const AdminLeaveManager = () => {
                 <tr className="text-sm tracking-wider text-gray-600 uppercase border-b border-gray-200 bg-gray-50">
                   <th className="p-4 font-semibold">Employee</th>
                   <th className="p-4 font-semibold">Leave Details</th>
-                  <th className="p-4 font-semibold">Dates</th>
+                  <th className="p-4 font-semibold">Reason</th>
                   <th className="p-4 font-semibold">Status</th>
                   <th className="p-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredLeaves.length === 0 ? (
-                  <tr><td colSpan="5" className="p-8 italic text-center text-gray-500">No leave requests found for this filter.</td></tr>
+                {requests.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="p-8 italic text-center text-gray-500">
+                      No leave requests found in the system.
+                    </td>
+                  </tr>
                 ) : (
-                  filteredLeaves.map((leave) => (
-                    <tr key={leave.id} className="transition-colors hover:bg-gray-50">
-                      
+                  requests.map((record) => (
+                    <tr key={record.id} className="transition-colors hover:bg-gray-50">
                       <td className="p-4">
-                        <div className="font-medium text-gray-900">{getEmployeeName(leave.employee_id)}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">EMP-{leave.employee_id}</div>
+                        <div className="font-medium text-gray-900">{record.first_name} {record.last_name}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">EMP-{record.user_id}</div>
                       </td>
-                      
                       <td className="p-4">
-                        <div className="font-semibold text-blue-600">{leave.leave_type || 'General Leave'}</div>
-                        <div className="text-sm text-gray-600 max-w-xs truncate" title={leave.reason}>
-                          {leave.reason || 'No reason provided'}
+                        <div className="font-medium text-blue-600">{record.leave_type} Leave</div>
+                        <div className="mt-1 text-sm text-gray-500">
+                          {new Date(record.start_date).toLocaleDateString()} &rarr; {new Date(record.end_date).toLocaleDateString()}
                         </div>
                       </td>
-                      
-                      <td className="p-4">
-                        <div className="text-sm font-medium text-gray-800">
-                          {new Date(leave.start_date).toLocaleDateString()}
-                        </div>
-                        <div className="text-xs text-gray-500">to</div>
-                        <div className="text-sm font-medium text-gray-800">
-                          {new Date(leave.end_date).toLocaleDateString()}
-                        </div>
+                      <td className="p-4 text-sm text-gray-600 max-w-[200px] truncate" title={record.reason}>
+                        {record.reason}
                       </td>
-                      
                       <td className="p-4">
-                        {getStatusBadge(leave.status)}
+                        {getStatusBadge(record.status)}
                       </td>
-                      
-                      <td className="p-4 text-right space-x-2">
-                        {leave.status === 'Pending' ? (
-                          <>
+                      <td className="p-4 text-right">
+                        {/* Only show action buttons if the request is still pending */}
+                        {record.status === 'Pending' ? (
+                          <div className="flex justify-end gap-2">
                             <button 
-                              onClick={() => handleUpdateStatus(leave.id, 'Approved')}
-                              className="px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+                              onClick={() => handleUpdateStatus(record.id, 'Approved')}
+                              className="px-3 py-1.5 text-sm font-medium text-white transition-colors bg-emerald-600 rounded-lg hover:bg-emerald-700"
                             >
                               Approve
                             </button>
                             <button 
-                              onClick={() => handleUpdateStatus(leave.id, 'Rejected')}
-                              className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors shadow-sm"
+                              onClick={() => handleUpdateStatus(record.id, 'Rejected')}
+                              className="px-3 py-1.5 text-sm font-medium text-white transition-colors bg-red-600 rounded-lg hover:bg-red-700"
                             >
                               Reject
                             </button>
-                          </>
+                          </div>
                         ) : (
                           <span className="text-sm text-gray-400 italic">Processed</span>
                         )}
                       </td>
-                      
                     </tr>
                   ))
                 )}

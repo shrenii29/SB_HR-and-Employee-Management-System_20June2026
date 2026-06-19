@@ -21,11 +21,11 @@ const EmployeeLayout = () => {
           <Link to="/employee-dashboard/attendance" className="flex items-center gap-3 text-gray-600 hover:text-emerald-600">
             <Clock size={20}/> Attendance
           </Link>
-          <Link to="/employee-dashboard/leaves" className="flex items-center gap-3 text-gray-400 cursor-not-allowed">
-            <Calendar size={20}/> Leaves (Soon)
+          <Link to="/employee-dashboard/leaves" className="flex items-center gap-3 text-gray-600 hover:text-emerald-600">
+            <Calendar size={20}/> Leaves
           </Link>
-          <Link to="/employee-dashboard/salary" className="flex items-center gap-3 text-gray-400 cursor-not-allowed">
-            <IndianRupee size={20}/> Salary (Soon)
+          <Link to="/employee-dashboard/payroll" className="flex items-center gap-3 text-gray-600 hover:text-emerald-600">
+            <Wallet size={20}/> Payroll
           </Link>
           
           <button 
