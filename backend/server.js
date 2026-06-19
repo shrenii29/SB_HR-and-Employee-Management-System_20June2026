@@ -21,6 +21,7 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 const payrollRoutes = require('./routes/payrollRoutes'); // NEW
 const dashboardRoutes = require('./routes/dashboardRoutes'); // NEW
 
+
 // === Mount Routes ===
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
@@ -29,6 +30,7 @@ app.use('/api/leaves', leaveRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/dashboard', dashboardRoutes); // NEW
+
 
 // Basic test route
 app.get('/', (req, res) => {

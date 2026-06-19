@@ -1,24 +1,80 @@
 const express = require('express');
 const router = express.Router();
-const { verifyToken } = require('../middleware/authMiddleware'); // Your existing file
+// FIX 1: Added verifyAdmin right here
+const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware'); 
 const db = require('../config/db');
 
-// Punch In
-router.post('/punch-in', verifyToken, (req, res) => {
-    const sql = "INSERT INTO attendance (user_id) VALUES (?)";
-    db.query(sql, [req.user.id], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: "Punched in successfully" });
-    });
+// 1. GET user's personal attendance history
+// FIX 2: Removed the duplicate verifyToken here
+router.get('/my-attendance', verifyToken, async (req, res) => {
+    try {
+        const sql = "SELECT * FROM attendance WHERE user_id = ? ORDER BY punch_in DESC LIMIT 30";
+        const [results] = await db.query(sql, [req.user.id]); 
+        res.json(results);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
-// Punch Out
-router.put('/punch-out', verifyToken, (req, res) => {
-    const sql = "UPDATE attendance SET punch_out = CURRENT_TIMESTAMP WHERE user_id = ? AND punch_out IS NULL ORDER BY id DESC LIMIT 1";
-    db.query(sql, [req.user.id], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
+// GET all attendance records (ADMIN ONLY)
+router.get('/all', verifyAdmin, async (req, res) => {
+    try {
+        const sql = `
+            SELECT a.*, u.first_name, u.last_name 
+            FROM attendance a
+            JOIN users u ON a.user_id = u.id
+            ORDER BY a.punch_in DESC
+        `;
+        const [results] = await db.query(sql);
+        res.json(results);
+    } catch (err) {
+        console.error("DB Error:", err.message);
+        res.status(500).json({ error: "Failed to fetch organization attendance." });
+    }
+});
+
+// 2. Punch In (UPDATED WITH LOGIC GUARD)
+router.post('/punch-in', verifyToken, async (req, res) => {
+    try {
+        // First, check their most recent punch record
+        const checkSql = "SELECT punch_out FROM attendance WHERE user_id = ? ORDER BY punch_in DESC LIMIT 1";
+        const [lastRecord] = await db.query(checkSql, [req.user.id]);
+
+        // If a record exists AND the punch_out is null, they are still on the clock
+        if (lastRecord.length > 0 && lastRecord[0].punch_out === null) {
+            return res.status(400).json({ error: "You are already punched in! Please punch out first." });
+        }
+
+        // If safe, record the new punch in
+        const insertSql = "INSERT INTO attendance (user_id) VALUES (?)";
+        await db.query(insertSql, [req.user.id]);
+        
+        res.json({ message: "Successfully clocked in." });
+    } catch (err) {
+        console.error("DB Error:", err.message);
+        res.status(500).json({ error: "Database error during punch in." });
+    }
+});
+
+// 3. Punch Out
+router.put('/punch-out', verifyToken, async (req, res) => {
+    console.log("--- PUNCH OUT INITIATED (ASYNC) ---");
+    try {
+        const sql = "UPDATE attendance SET punch_out = CURRENT_TIMESTAMP WHERE user_id = ? AND punch_out IS NULL ORDER BY id DESC LIMIT 1";
+        const [result] = await db.query(sql, [req.user.id]);
+        
+        console.log("3. Database responded! Rows updated:", result.affectedRows);
+        
+        if (result.affectedRows === 0) {
+            return res.status(400).json({ error: "No active punch-in found to punch out from." });
+        }
+
         res.json({ message: "Punched out successfully" });
-    });
+    } catch (err) {
+        console.error("DB Error:", err.message);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 module.exports = router;

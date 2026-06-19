@@ -4,27 +4,22 @@ import { ClipboardCheck, CheckCircle2, XCircle, Clock, Calendar } from 'lucide-r
 
 const AdminAttendanceManager = () => {
   const [attendance, setAttendance] = useState([]);
-  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // Default filter to today's date (YYYY-MM-DD format for input)
-  const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0]);
+  // Default filter to today's date (YYYY-MM-DD)
+  const [dateFilter, setDateFilter] = useState(new Date().toLocaleDateString('en-CA'));
 
   const fetchData = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [attRes, empRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL}/attendance`, { headers }),
-        axios.get(`${import.meta.env.VITE_API_URL}/employees`, { headers })
-      ]);
-
-      setAttendance(attRes.data);
-      setEmployees(empRes.data);
+      // We only need one API call now because the backend JOINs the user data!
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/attendance/all`, { headers });
+      setAttendance(res.data);
     } catch (err) {
-      setError('Failed to load attendance records. Ensure your backend /attendance endpoint is running.');
+      setError('Failed to load organization attendance records.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -35,15 +30,13 @@ const AdminAttendanceManager = () => {
     fetchData();
   }, [fetchData]);
 
-  const getEmployeeName = (empId) => {
-    const emp = employees.find(e => e.id === empId);
-    return emp ? `${emp.first_name} ${emp.last_name}` : 'Unknown Employee';
-  };
-
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, punchOut) => {
+    if (!punchOut) {
+       return <span className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-yellow-700 bg-yellow-100 rounded-full w-fit"><Clock size={14}/> Active Shift</span>;
+    }
     switch (status?.toLowerCase()) {
       case 'present':
-        return <span className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full w-fit"><CheckCircle2 size={14}/> Present</span>;
+        return <span className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full w-fit"><CheckCircle2 size={14}/> Completed</span>;
       case 'absent':
         return <span className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full w-fit"><XCircle size={14}/> Absent</span>;
       case 'late':
@@ -55,17 +48,17 @@ const AdminAttendanceManager = () => {
 
   // Filter records by the selected date
   const filteredAttendance = attendance.filter(record => {
-    if (!record.date) return false;
-    // Extract just the YYYY-MM-DD part from the database timestamp
-    const recordDate = new Date(record.date).toISOString().split('T')[0];
+    if (!record.punch_in) return false;
+    // Extract YYYY-MM-DD strictly in local time to prevent timezone jumps
+    const recordDate = new Date(record.punch_in).toLocaleDateString('en-CA');
     return recordDate === dateFilter;
   });
 
-  // Calculate quick stats for the day
+  // Calculate quick stats for the filtered day
   const stats = {
-    present: filteredAttendance.filter(r => r.status?.toLowerCase() === 'present').length,
-    absent: filteredAttendance.filter(r => r.status?.toLowerCase() === 'absent').length,
-    late: filteredAttendance.filter(r => r.status?.toLowerCase() === 'late').length,
+    present: filteredAttendance.filter(r => r.punch_out !== null).length,
+    active: filteredAttendance.filter(r => r.punch_out === null).length,
+    total: filteredAttendance.length
   };
 
   return (
@@ -74,42 +67,42 @@ const AdminAttendanceManager = () => {
       {/* Header & Date Picker */}
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 className="flex items-center gap-2 text-2xl font-bold text-gray-800">
             <ClipboardCheck className="text-blue-500" />
             Daily Attendance Log
           </h2>
-          <p className="text-gray-500 text-sm mt-1">Monitor employee presence and working hours.</p>
+          <p className="mt-1 text-sm text-gray-500">Monitor employee presence and working hours.</p>
         </div>
         
-        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg shadow-sm p-2">
+        <div className="flex items-center gap-2 p-2 bg-white border border-gray-200 rounded-lg shadow-sm">
           <Calendar size={18} className="text-gray-400" />
           <input 
             type="date" 
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="text-sm font-medium text-gray-700 outline-none bg-transparent cursor-pointer"
+            className="text-sm font-medium text-gray-700 bg-transparent outline-none cursor-pointer"
           />
         </div>
       </div>
 
       {/* Daily Stats Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center">
-          <span className="text-sm text-gray-500 font-medium">Present</span>
+        <div className="flex flex-col items-center p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
+          <span className="font-medium text-gray-500 text-sm">Active Now</span>
+          <span className="text-2xl font-bold text-yellow-600">{stats.active}</span>
+        </div>
+        <div className="flex flex-col items-center p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
+          <span className="font-medium text-gray-500 text-sm">Completed Shifts</span>
           <span className="text-2xl font-bold text-green-600">{stats.present}</span>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center">
-          <span className="text-sm text-gray-500 font-medium">Late</span>
-          <span className="text-2xl font-bold text-orange-600">{stats.late}</span>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center">
-          <span className="text-sm text-gray-500 font-medium">Absent</span>
-          <span className="text-2xl font-bold text-red-600">{stats.absent}</span>
+        <div className="flex flex-col items-center p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
+          <span className="font-medium text-gray-500 text-sm">Total Punches Today</span>
+          <span className="text-2xl font-bold text-blue-600">{stats.total}</span>
         </div>
       </div>
 
       {/* Attendance Table */}
-      <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+      <div className="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl">
         {loading && <div className="p-8 text-center text-gray-500">Loading records...</div>}
         {error && <div className="p-4 m-6 text-red-700 border border-red-200 rounded-lg bg-red-50">{error}</div>}
 
@@ -128,32 +121,43 @@ const AdminAttendanceManager = () => {
               <tbody className="divide-y divide-gray-100">
                 {filteredAttendance.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="p-8 text-center text-gray-500 italic">
+                    <td colSpan="5" className="p-8 italic text-center text-gray-500">
                       No attendance records found for {new Date(dateFilter).toLocaleDateString()}.
                     </td>
                   </tr>
                 ) : (
-                  filteredAttendance.map((record) => (
-                    <tr key={record.id} className="transition-colors hover:bg-gray-50">
-                      <td className="p-4">
-                        <div className="font-medium text-gray-900">{getEmployeeName(record.employee_id)}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">EMP-{record.employee_id}</div>
-                      </td>
-                      <td className="p-4">
-                        {getStatusBadge(record.status)}
-                      </td>
-                      <td className="p-4 text-sm text-gray-600 font-medium">
-                        {record.check_in ? new Date(`1970-01-01T${record.check_in}Z`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}
-                      </td>
-                      <td className="p-4 text-sm text-gray-600 font-medium">
-                        {record.check_out ? new Date(`1970-01-01T${record.check_out}Z`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'}
-                      </td>
-                      <td className="p-4 text-sm text-gray-800 font-semibold">
-                        {/* Assuming your backend calculates hours or provides a default, otherwise placeholder */}
-                        {record.total_hours ? `${record.total_hours} hrs` : '-'}
-                      </td>
-                    </tr>
-                  ))
+                  filteredAttendance.map((record) => {
+                    // Auto-calculate total hours if both punches exist
+                    let totalHours = '-';
+                    if (record.punch_in && record.punch_out) {
+                      const diffInMs = new Date(record.punch_out) - new Date(record.punch_in);
+                      totalHours = (diffInMs / (1000 * 60 * 60)).toFixed(2) + ' hrs';
+                    }
+
+                    return (
+                      <tr key={record.id} className="transition-colors hover:bg-gray-50">
+                        <td className="p-4">
+                          <div className="font-medium text-gray-900">{record.first_name} {record.last_name}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">EMP-{record.user_id}</div>
+                        </td>
+                        <td className="p-4">
+                          {getStatusBadge(record.status, record.punch_out)}
+                        </td>
+                        <td className="p-4 text-sm font-medium text-emerald-600">
+                          {new Date(record.punch_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </td>
+                        <td className="p-4 text-sm font-medium text-blue-600">
+                          {record.punch_out 
+                            ? new Date(record.punch_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                            : '--:--'
+                          }
+                        </td>
+                        <td className="p-4 font-semibold text-sm text-gray-800">
+                          {totalHours}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
