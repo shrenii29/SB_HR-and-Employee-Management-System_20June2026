@@ -1,13 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const { markAttendance, getMyAttendance, getAllAttendance } = require('../controllers/attendanceController');
-const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware');
+const { verifyToken } = require('../middleware/authMiddleware'); // Your existing file
+const db = require('../config/db');
 
-// === Employee Routes ===
-router.post('/mark', verifyToken, markAttendance);
-router.get('/my-attendance', verifyToken, getMyAttendance);
+// Punch In
+router.post('/punch-in', verifyToken, (req, res) => {
+    const sql = "INSERT INTO attendance (user_id) VALUES (?)";
+    db.query(sql, [req.user.id], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Punched in successfully" });
+    });
+});
 
-// === Admin Routes ===
-router.get('/', verifyAdmin, getAllAttendance);
+// Punch Out
+router.put('/punch-out', verifyToken, (req, res) => {
+    const sql = "UPDATE attendance SET punch_out = CURRENT_TIMESTAMP WHERE user_id = ? AND punch_out IS NULL ORDER BY id DESC LIMIT 1";
+    db.query(sql, [req.user.id], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Punched out successfully" });
+    });
+});
 
 module.exports = router;
