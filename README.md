@@ -60,7 +60,7 @@ Create a .env file in the root of the backend folder and add your configuration:
 PORT=5000
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=Shreni@2005
+DB_PASSWORD=your_password
 DB_NAME=hr_management_db
 JWT_SECRET=super_secret_jwt_key_123
 ```
