@@ -17,6 +17,8 @@ import EmployeeDashboard from './pages/EmployeeDashboard';
 import AttendancePage from './pages/AttendancePage';
 import EmployeeLeave from './pages/EmployeeLeave';
 import EmployeePayroll from './pages/EmployeePayroll';
+import EditProfile from './pages/EditProfile';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -37,11 +39,13 @@ function App() {
 
         {/* NEW Employee Route */}
         <Route path="/employee-dashboard" element={<EmployeeLayout />}>
-            <Route index element={<EmployeeDashboard />} /> 
-            <Route path="attendance" element={<AttendancePage />} />
-            <Route path="leaves" element={<EmployeeLeave />} /> 
-            <Route path="payroll" element={<EmployeePayroll />} /> 
-        </Route>
+  <Route index element={<EmployeeDashboard />} />
+  <Route path="attendance" element={<AttendancePage />} />
+  <Route path="leaves" element={<EmployeeLeave />} />
+  <Route path="payroll" element={<EmployeePayroll />} />
+  <Route path="profile" element={<Profile />} />
+  <Route path="edit-profile" element={<EditProfile />} />
+</Route>
 
         {/* Catch-All */}
         <Route path="*" element={<Navigate to="/" />} />

@@ -35,39 +35,51 @@ const register = async (req, res) => {
 // @desc    Authenticate user & get token
 // @route   POST /api/auth/login
 const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-        // 1. Find the user by email
-        const [users] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-        if (users.length === 0) {
-            return res.status(401).json({ message: 'Invalid email or password.' });
-        }
+    const [users] = await db.query(`
+      SELECT u.*, d.name AS department_name
+      FROM users u
+      LEFT JOIN departments d ON u.department_id = d.id
+      WHERE u.email = ?
+    `, [email]);
 
-        const user = users[0];
-
-        // 2. Compare the provided password with the hashed password in DB
-        const isMatch = await bcrypt.compare(password, user.password_hash);
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid email or password.' });
-        }
-
-        // 3. Generate a JWT Token
-        const token = jwt.sign(
-            { id: user.id, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: '8h' } // Token expires in 8 hours
-        );
-
-        res.status(200).json({
-            message: 'Login successful',
-            token,
-            user: { id: user.id, first_name: user.first_name, role: user.role }
-        });
-    } catch (error) {
-        console.error('Login Error:', error);
-        res.status(500).json({ message: 'Server error during login.' });
+    if (users.length === 0) {
+      return res.status(401).json({ message: 'Invalid email or password.' });
     }
+
+    const user = users[0];
+
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        role: user.role,
+        phone_number: user.phone_number,
+        department_name: user.department_name
+      }
+    });
+
+  } catch (error) {
+    console.error('Login Error:', error);
+    res.status(500).json({ message: 'Server error during login.' });
+  }
 };
 
 module.exports = { register, login };

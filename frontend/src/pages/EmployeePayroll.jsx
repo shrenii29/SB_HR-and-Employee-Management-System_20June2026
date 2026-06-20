@@ -74,8 +74,7 @@ const EmployeePayroll = () => {
                   <th className="p-4 font-semibold">Allowances</th>
                   <th className="p-4 font-semibold">Deductions</th>
                   <th className="p-4 font-semibold text-emerald-700">Net Pay</th>
-                  <th className="p-4 font-semibold">Status</th>
-                  <th className="p-4 font-semibold text-right">Action</th>
+                  
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -103,19 +102,8 @@ const EmployeePayroll = () => {
                       <td className="p-4 font-bold text-emerald-600 text-lg">
                         {formatCurrency(slip.net_salary)}
                       </td>
-                      <td className="p-4">
-                        <span className="flex items-center gap-1 px-3 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full w-fit">
-                          <CheckCircle2 size={14} /> {slip.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">
-                        <button 
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center gap-1 text-sm font-medium"
-                          onClick={() => alert(`Downloading payslip for ${formatMonthYear(slip.month_year)}...`)}
-                        >
-                          <Download size={16} /> PDF
-                        </button>
-                      </td>
+                      
+                      
                     </tr>
                   ))
                 )}

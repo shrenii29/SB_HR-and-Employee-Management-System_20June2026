@@ -51,8 +51,13 @@ const AttendancePage = () => {
   };
 
   // Determine current status based on the most recent history record
-  const lastRecord = history[0];
-  const isCurrentlyWorking = lastRecord && lastRecord.punch_out === null;
+const today = new Date().toISOString().split('T')[0];
+
+const todayRecord = history.find(r =>
+  r.punch_in && r.punch_in.startsWith(today)
+);
+
+const isCurrentlyWorking = todayRecord && todayRecord.punch_out === null;
 
   return (
     <div className="space-y-6">

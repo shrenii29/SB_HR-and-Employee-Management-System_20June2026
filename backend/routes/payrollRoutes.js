@@ -33,37 +33,36 @@ router.get('/all', verifyAdmin, async (req, res) => {
 });
 
 // 3. ADMIN: Generate a New Payslip
+// 3. ADMIN: Generate a New Payslip (UPDATED WITH MATH)
+// 3. ADMIN: Generate or Edit a Payslip
 router.post('/generate', verifyAdmin, async (req, res) => {
     try {
         const { user_id, month_year, basic_salary, allowances, deductions } = req.body;
 
-        // Validation
         if (!user_id || !month_year || !basic_salary) {
             return res.status(400).json({ error: "User ID, Month/Year, and Basic Salary are required." });
         }
 
-        // Note: We don't insert net_salary because MySQL calculates it automatically!
+        const basic = parseFloat(basic_salary);
+        const allow = parseFloat(allowances) || 0;
+        const deduct = parseFloat(deductions) || 0;
+
         const sql = `
-            INSERT INTO payroll (user_id, month_year, basic_salary, allowances, deductions, status) 
+            INSERT INTO payroll 
+            (user_id, month_year, basic_salary, allowances, deductions, status) 
             VALUES (?, ?, ?, ?, ?, 'Paid')
+            ON DUPLICATE KEY UPDATE
+            basic_salary = VALUES(basic_salary),
+            allowances = VALUES(allowances),
+            deductions = VALUES(deductions)
         `;
-        
-        await db.query(sql, [
-            user_id, 
-            month_year, 
-            basic_salary, 
-            allowances || 0, 
-            deductions || 0
-        ]);
-        
-        res.json({ message: "Payroll record generated successfully." });
+
+        await db.query(sql, [user_id, month_year, basic, allow, deduct]);
+
+        res.json({ message: "Payroll record saved successfully." });
     } catch (err) {
-        // Catch duplicate month entry error
-        if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(400).json({ error: "A payroll record for this employee already exists for this month." });
-        }
         console.error("DB Error:", err.message);
-        res.status(500).json({ error: "Failed to generate payroll record." });
+        res.status(500).json({ error: "Failed to update payroll record." });
     }
 });
 

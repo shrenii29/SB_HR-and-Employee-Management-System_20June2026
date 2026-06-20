@@ -17,16 +17,17 @@ const AdminOverview = () => {
         const headers = { Authorization: `Bearer ${token}` };
 
         // Fetch both simultaneously
-        const [empRes, deptRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL}/employees`, { headers }),
-          axios.get(`${import.meta.env.VITE_API_URL}/departments`, { headers })
-        ]);
+        const [empRes, deptRes, leaveRes] = await Promise.all([
+  axios.get(`${import.meta.env.VITE_API_URL}/employees`, { headers }),
+  axios.get(`${import.meta.env.VITE_API_URL}/departments`, { headers }),
+  axios.get(`${import.meta.env.VITE_API_URL}/leave/pending-count`, { headers })
+]);
 
-        setStats({
-          employees: empRes.data.length,
-          departments: deptRes.data.length,
-          pendingLeaves: 0 
-        });
+setStats({
+  employees: empRes.data.length,
+  departments: deptRes.data.length,
+  pendingLeaves: leaveRes.data.pending || 0
+});
       } catch (error) {
         console.error("Failed to fetch analytics", error);
       } finally {

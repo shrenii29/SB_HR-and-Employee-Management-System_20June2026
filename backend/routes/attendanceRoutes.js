@@ -38,13 +38,18 @@ router.get('/all', verifyAdmin, async (req, res) => {
 router.post('/punch-in', verifyToken, async (req, res) => {
     try {
         // First, check their most recent punch record
-        const checkSql = "SELECT punch_out FROM attendance WHERE user_id = ? ORDER BY punch_in DESC LIMIT 1";
-        const [lastRecord] = await db.query(checkSql, [req.user.id]);
+        const checkSql = `
+    SELECT * FROM attendance 
+    WHERE user_id = ? 
+    AND DATE(punch_in) = CURDATE()
+    LIMIT 1
+`;
 
-        // If a record exists AND the punch_out is null, they are still on the clock
-        if (lastRecord.length > 0 && lastRecord[0].punch_out === null) {
-            return res.status(400).json({ error: "You are already punched in! Please punch out first." });
-        }
+const [todayRecord] = await db.query(checkSql, [req.user.id]);
+
+if (todayRecord.length > 0 && todayRecord[0].punch_out === null) {
+    return res.status(400).json({ error: "You are already punched in today." });
+}
 
         // If safe, record the new punch in
         const insertSql = "INSERT INTO attendance (user_id) VALUES (?)";
@@ -61,8 +66,13 @@ router.post('/punch-in', verifyToken, async (req, res) => {
 router.put('/punch-out', verifyToken, async (req, res) => {
     console.log("--- PUNCH OUT INITIATED (ASYNC) ---");
     try {
-        const sql = "UPDATE attendance SET punch_out = CURRENT_TIMESTAMP WHERE user_id = ? AND punch_out IS NULL ORDER BY id DESC LIMIT 1";
-        const [result] = await db.query(sql, [req.user.id]);
+const sql = `
+    UPDATE attendance 
+    SET punch_out = CURRENT_TIMESTAMP 
+    WHERE user_id = ? 
+    AND punch_out IS NULL
+    AND DATE(punch_in) = CURDATE()
+`;        const [result] = await db.query(sql, [req.user.id]);
         
         console.log("3. Database responded! Rows updated:", result.affectedRows);
         

@@ -1,18 +1,60 @@
 const express = require('express');
 const router = express.Router();
-const { getAllEmployees, updateEmployee, deleteEmployee } = require('../controllers/employeeController');
-const { verifyAdmin } = require('../middleware/authMiddleware');
+const db = require('../config/db');
 
-// All routes below this line are protected by the verifyAdmin middleware
-router.use(verifyAdmin);
+const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware');
+router.put('/update-profile', verifyToken, async (req, res) => {
+  try {
+    const { phone_number } = req.body;
 
-// Route: GET /api/employees
-router.get('/', getAllEmployees);
+    // VALIDATION (important)
+    if (!phone_number) {
+      return res.status(400).json({ error: "Phone number required" });
+    }
 
-// Route: PUT /api/employees/:id
-router.put('/:id', updateEmployee);
+    // Only digits, exactly 10
+    const phoneRegex = /^[0-9]{10}$/;
 
-// Route: DELETE /api/employees/:id
-router.delete('/:id', deleteEmployee);
+    if (!phoneRegex.test(phone_number)) {
+      return res.status(400).json({ error: "Phone must be exactly 10 digits" });
+    }
+
+    // Update DB
+    await db.query(
+      "UPDATE users SET phone_number = ? WHERE id = ?",
+      [phone_number, req.user.id]
+    );
+
+    // Fetch updated user with department
+    const [[updatedUser]] = await db.query(`
+      SELECT u.*, d.name AS department_name
+      FROM users u
+      LEFT JOIN departments d ON u.department_id = d.id
+      WHERE u.id = ?
+    `, [req.user.id]);
+
+    res.json({ user: updatedUser });
+
+  } catch (err) {
+    console.error("UPDATE ERROR:", err.message);
+    res.status(500).json({ error: "Update failed" });
+  }
+});
+
+router.get('/', verifyAdmin, async (req, res) => {
+  try {
+    const [employees] = await db.query(`
+      SELECT u.*, d.name AS department_name
+      FROM users u
+      LEFT JOIN departments d ON u.department_id = d.id
+      WHERE u.role = 'Employee'
+    `);
+
+    res.json(employees);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch employees" });
+  }
+});
 
 module.exports = router;

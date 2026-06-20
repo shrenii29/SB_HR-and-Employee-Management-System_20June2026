@@ -29,7 +29,7 @@ const AdminPayrollManager = () => {
 
       const empRes = await axios.get(`${import.meta.env.VITE_API_URL}/employees`, { headers });
       
-      const payRes = await axios.get(`${import.meta.env.VITE_API_URL}/payroll`, { headers });
+      const payRes = await axios.get(`${import.meta.env.VITE_API_URL}/payroll/all`, { headers });
 setPayrollData(payRes.data);
 
       setEmployees(empRes.data);
@@ -45,7 +45,7 @@ setPayrollData(payRes.data);
   }, [fetchData]);
 
 const getEmployeePayroll = (empId) => {
-  const records = payrollData.filter(p => p.user_id === empId);
+  const records = payrollData.filter(p => Number(p.user_id) === Number(empId));
 
   const latest = records.sort((a, b) => {
     return b.month_year.localeCompare(a.month_year);
@@ -63,7 +63,7 @@ const getEmployeePayroll = (empId) => {
     setSelectedEmp(emp);
     setFormData({
       month_year: currentMonth,
-      basic_salary: currentPay.basic_salary || currentPay.base_salary || '',
+      basic_salary: currentPay.basic_salary || currentPay.basic_salary || '',
       allowances: currentPay.allowances || '',
       deductions: currentPay.deductions || ''
     });
@@ -108,7 +108,7 @@ const getEmployeePayroll = (empId) => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${import.meta.env.VITE_API_URL}/payroll`, payload, { 
+      await axios.post(`${import.meta.env.VITE_API_URL}/payroll/generate`, payload, { 
         headers: { Authorization: `Bearer ${token}` } 
       });
       await fetchData();   // ← ADD THIS LINE
@@ -123,7 +123,7 @@ const getEmployeePayroll = (empId) => {
 
   const totalPayrollCost = employees.reduce((acc, emp) => {
     const pay = getEmployeePayroll(emp.id);
-    return acc + calculateNetPay(pay.basic_salary || pay.base_salary, pay.allowances, pay.deductions);
+    return acc + calculateNetPay(pay.basic_salary || pay.basic_salary, pay.allowances, pay.deductions);
   }, 0);
 
   return (
@@ -171,7 +171,7 @@ const getEmployeePayroll = (empId) => {
                 ) : (
                   employees.map((emp) => {
                     const pay = getEmployeePayroll(emp.id);
-                    const netPay = calculateNetPay(pay.basic_salary || pay.base_salary, pay.allowances, pay.deductions);
+                    const netPay = calculateNetPay(pay.basic_salary || pay.basic_salary, pay.allowances, pay.deductions);
                     
                     return (
                       <tr key={emp.id} className="transition-colors hover:bg-emerald-50/30">
@@ -179,7 +179,7 @@ const getEmployeePayroll = (empId) => {
                           <div className="font-medium text-gray-900">{emp.first_name} {emp.last_name}</div>
                           <div className="text-xs text-gray-500 mt-0.5">EMP-{emp.id}</div>
                         </td>
-                        <td className="p-4 text-right text-gray-600 font-medium">₹{Number(pay.basic_salary || pay.base_salary || 0).toLocaleString('en-IN')}</td>
+                        <td className="p-4 text-right text-gray-600 font-medium">₹{Number(pay.basic_salary || pay.basic_salary || 0).toLocaleString('en-IN')}</td>
                         <td className="p-4 text-right text-green-600 font-medium">+ ₹{Number(pay.allowances || 0).toLocaleString('en-IN')}</td>
                         <td className="p-4 text-right text-red-500 font-medium">- ₹{Number(pay.deductions || 0).toLocaleString('en-IN')}</td>
                         <td className="p-4 text-right text-gray-900 font-bold text-lg">₹{netPay.toLocaleString('en-IN')}</td>

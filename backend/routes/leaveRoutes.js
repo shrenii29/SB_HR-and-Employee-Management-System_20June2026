@@ -74,6 +74,41 @@ router.put('/update-status/:id', verifyAdmin, async (req, res) => {
         console.error("DB Error:", err.message);
         res.status(500).json({ error: "Failed to update leave status." });
     }
+}); 
+
+
+router.get('/my-leave-summary', verifyToken, async (req, res) => {
+  const [[result]] = await db.query(`
+    SELECT COUNT(*) AS used_leaves
+    FROM leave_requests
+    WHERE user_id = ?
+    AND status = 'Approved'
+  `, [req.user.id]);
+
+  const total = 12;
+
+  res.json({
+    total,
+    used: result.used_leaves,
+    remaining: total - result.used_leaves
+  });
 });
+
+
+router.get('/pending-count', verifyAdmin, async (req, res) => {
+  try {
+    const [[result]] = await db.query(`
+      SELECT COUNT(*) AS pending
+      FROM leave_requests
+      WHERE status = 'Pending'
+    `);
+
+    res.json({ pending: result.pending });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch pending leaves" });
+  }
+});
+
 
 module.exports = router;
