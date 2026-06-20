@@ -26,7 +26,7 @@ const EmployeePayroll = () => {
     fetchPayslips();
   }, [fetchPayslips]);
 
-  // Helper function to format strings like '2023-10' into 'October 2023'
+  
   const formatMonthYear = (yyyymm) => {
     if (!yyyymm) return '';
     const [year, month] = yyyymm.split('-');
@@ -34,7 +34,7 @@ const EmployeePayroll = () => {
     return date.toLocaleString('default', { month: 'long', year: 'numeric' });
   };
 
-  // Helper to format currency
+  
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',

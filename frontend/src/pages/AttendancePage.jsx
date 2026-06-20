@@ -6,7 +6,7 @@ const AttendancePage = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // NEW: State for our sleek on-screen notifications
+  
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
   const fetchHistory = useCallback(async () => {
@@ -27,7 +27,7 @@ const AttendancePage = () => {
     fetchHistory();
   }, [fetchHistory]);
 
-  // NEW: Helper function to show notifications that disappear after 3 seconds
+  
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type });
     setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
@@ -50,7 +50,7 @@ const AttendancePage = () => {
     }
   };
 
-  // Determine current status based on the most recent history record
+  
 const today = new Date().toISOString().split('T')[0];
 
 const todayRecord = history.find(r =>
@@ -64,7 +64,7 @@ const isCurrentlyWorking = todayRecord && todayRecord.punch_out === null;
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-800">Time & Attendance</h1>
         
-        {/* Sleek Notification Badge */}
+        {}
         {notification.show && (
           <div className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold shadow-sm transition-all ${notification.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
             <Info size={16} />
@@ -73,7 +73,7 @@ const isCurrentlyWorking = todayRecord && todayRecord.punch_out === null;
         )}
       </div>
 
-      {/* Action Cards */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-emerald-100 flex flex-col items-center justify-center text-center">
           <Clock size={32} className={`mb-3 ${isCurrentlyWorking ? 'text-gray-300' : 'text-emerald-600'}`} />
@@ -108,7 +108,7 @@ const isCurrentlyWorking = todayRecord && todayRecord.punch_out === null;
         </div>
       </div>
 
-      {/* History Table */}
+      {}
       <div className="bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
         <div className="p-4 border-b border-gray-200 bg-gray-50">
           <h2 className="font-bold text-gray-700">Recent Logs</h2>

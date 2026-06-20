@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-// FIX 1: Added verifyAdmin right here
+
 const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware'); 
 const db = require('../config/db');
 
-// 1. GET user's personal attendance history
-// FIX 2: Removed the duplicate verifyToken here
+
+
 router.get('/my-attendance', verifyToken, async (req, res) => {
     try {
         const sql = "SELECT * FROM attendance WHERE user_id = ? ORDER BY punch_in DESC LIMIT 30";
@@ -17,7 +17,7 @@ router.get('/my-attendance', verifyToken, async (req, res) => {
     }
 });
 
-// GET all attendance records (ADMIN ONLY)
+
 router.get('/all', verifyAdmin, async (req, res) => {
     try {
         const sql = `
@@ -34,10 +34,10 @@ router.get('/all', verifyAdmin, async (req, res) => {
     }
 });
 
-// 2. Punch In (UPDATED WITH LOGIC GUARD)
+
 router.post('/punch-in', verifyToken, async (req, res) => {
     try {
-        // First, check their most recent punch record
+        
         const checkSql = `
     SELECT * FROM attendance 
     WHERE user_id = ? 
@@ -51,7 +51,7 @@ if (todayRecord.length > 0 && todayRecord[0].punch_out === null) {
     return res.status(400).json({ error: "You are already punched in today." });
 }
 
-        // If safe, record the new punch in
+        
         const insertSql = "INSERT INTO attendance (user_id) VALUES (?)";
         await db.query(insertSql, [req.user.id]);
         
@@ -62,7 +62,7 @@ if (todayRecord.length > 0 && todayRecord[0].punch_out === null) {
     }
 });
 
-// 3. Punch Out
+
 router.put('/punch-out', verifyToken, async (req, res) => {
     console.log("--- PUNCH OUT INITIATED (ASYNC) ---");
     try {

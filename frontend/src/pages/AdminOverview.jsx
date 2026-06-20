@@ -6,7 +6,7 @@ const AdminOverview = () => {
   const [stats, setStats] = useState({
     employees: 0,
     departments: 0,
-    pendingLeaves: 0 // We will build this backend logic later
+    pendingLeaves: 0 
   });
   const [loading, setLoading] = useState(true);
 
@@ -16,7 +16,7 @@ const AdminOverview = () => {
         const token = localStorage.getItem('token');
         const headers = { Authorization: `Bearer ${token}` };
 
-        // Fetch both simultaneously
+        
         const [empRes, deptRes, leaveRes] = await Promise.all([
   axios.get(`${import.meta.env.VITE_API_URL}/employees`, { headers }),
   axios.get(`${import.meta.env.VITE_API_URL}/departments`, { headers }),
@@ -47,7 +47,7 @@ setStats({
       <h2 className="mb-6 text-xl font-bold text-gray-800">Dashboard Analytics</h2>
       
       <div className="grid grid-cols-1 gap-6 mb-8 md:grid-cols-3">
-        {/* Employees Card */}
+        {}
         <div className="flex items-center p-6 bg-white border border-gray-200 shadow-sm rounded-xl">
           <div className="p-4 mr-4 text-blue-600 bg-blue-100 rounded-full">
             <Users size={28} />
@@ -58,7 +58,7 @@ setStats({
           </div>
         </div>
 
-        {/* Departments Card */}
+        {}
         <div className="flex items-center p-6 bg-white border border-gray-200 shadow-sm rounded-xl">
           <div className="p-4 mr-4 text-purple-600 bg-purple-100 rounded-full">
             <Building2 size={28} />
@@ -69,7 +69,7 @@ setStats({
           </div>
         </div>
 
-        {/* Leaves Card */}
+        {}
         <div className="flex items-center p-6 bg-white border border-gray-200 shadow-sm rounded-xl">
           <div className="p-4 mr-4 text-orange-600 bg-orange-100 rounded-full">
             <CalendarOff size={28} />

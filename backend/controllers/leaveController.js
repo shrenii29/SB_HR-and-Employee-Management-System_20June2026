@@ -1,15 +1,15 @@
 const db = require('../config/db');
 
-// ==============================
-// EMPLOYEE FUNCTIONS
-// ==============================
 
-// @desc    Apply for leave
-// @route   POST /api/leaves/apply
+
+
+
+
+
 const applyForLeave = async (req, res) => {
     try {
         const { leave_type, start_date, end_date, reason } = req.body;
-        const user_id = req.user.id; // Comes from our verifyToken middleware
+        const user_id = req.user.id; 
 
         if (!leave_type || !start_date || !end_date) {
             return res.status(400).json({ message: 'Please provide leave type and dates.' });
@@ -27,8 +27,8 @@ const applyForLeave = async (req, res) => {
     }
 };
 
-// @desc    Get logged-in employee's leave history
-// @route   GET /api/leaves/my-leaves
+
+
 const getMyLeaves = async (req, res) => {
     try {
         const user_id = req.user.id;
@@ -45,12 +45,12 @@ const getMyLeaves = async (req, res) => {
     }
 };
 
-// ==============================
-// ADMIN FUNCTIONS
-// ==============================
 
-// @desc    Get all leave requests (with employee names)
-// @route   GET /api/leaves
+
+
+
+
+
 const getAllLeaves = async (req, res) => {
     try {
         const query = `
@@ -68,12 +68,12 @@ const getAllLeaves = async (req, res) => {
     }
 };
 
-// @desc    Approve or Reject a leave request
-// @route   PUT /api/leaves/:id/status
+
+
 const updateLeaveStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body; // Should be 'Approved' or 'Rejected'
+        const { status } = req.body; 
 
         if (!['Approved', 'Rejected'].includes(status)) {
             return res.status(400).json({ message: 'Invalid status. Must be Approved or Rejected.' });

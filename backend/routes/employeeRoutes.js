@@ -7,25 +7,25 @@ router.put('/update-profile', verifyToken, async (req, res) => {
   try {
     const { phone_number } = req.body;
 
-    // VALIDATION (important)
+    
     if (!phone_number) {
       return res.status(400).json({ error: "Phone number required" });
     }
 
-    // Only digits, exactly 10
+    
     const phoneRegex = /^[0-9]{10}$/;
 
     if (!phoneRegex.test(phone_number)) {
       return res.status(400).json({ error: "Phone must be exactly 10 digits" });
     }
 
-    // Update DB
+  
     await db.query(
       "UPDATE users SET phone_number = ? WHERE id = ?",
       [phone_number, req.user.id]
     );
 
-    // Fetch updated user with department
+  
     const [[updatedUser]] = await db.query(`
       SELECT u.*, d.name AS department_name
       FROM users u

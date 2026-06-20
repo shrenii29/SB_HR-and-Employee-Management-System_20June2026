@@ -8,12 +8,12 @@ const EmployeeList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Modal & Form State
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   
-  // --- NEW: Inline Error State ---
+  
   const [fieldErrors, setFieldErrors] = useState({});
   
   const initialFormState = {
@@ -54,7 +54,7 @@ const EmployeeList = () => {
       });
       setEmployees(employees.filter(emp => emp.id !== id));
     } catch (err) {
-      alert('Failed to delete employee.'); // Kept as standard alert for destructive actions
+      alert('Failed to delete employee.'); 
     }
   };
 
@@ -70,7 +70,7 @@ const EmployeeList = () => {
       password: ''
     });
     setShowPassword(false);
-    setFieldErrors({}); // Clear errors when opening
+    setFieldErrors({}); 
     setIsModalOpen(true);
   };
 
@@ -78,21 +78,21 @@ const EmployeeList = () => {
     setEditingId(null);
     setFormData(initialFormState);
     setShowPassword(false);
-    setFieldErrors({}); // Clear errors when opening
+    setFieldErrors({}); 
     setIsModalOpen(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setFieldErrors({}); // Reset errors on new submission
+    setFieldErrors({}); 
     
-    // Client-side validation
+    
     let currentErrors = {};
     if (formData.phone_number && formData.phone_number.length !== 10) {
         currentErrors.phone_number = "Must be exactly 10 digits.";
     }
 
-    // Stop submission if client validation fails
+    
     if (Object.keys(currentErrors).length > 0) {
         setFieldErrors(currentErrors);
         return;
@@ -116,11 +116,11 @@ const EmployeeList = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Action failed.';
       
-      // Map backend errors to specific fields based on text
+      
       if (errorMsg.toLowerCase().includes('email')) {
         setFieldErrors({ email: errorMsg });
       } else {
-        // Fallback for general errors (e.g., server down)
+        
         setFieldErrors({ general: errorMsg });
       }
     }
@@ -193,7 +193,7 @@ const EmployeeList = () => {
         </div>
       )}
 
-      {/* --- ADD / EDIT MODAL --- */}
+      {}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-lg p-6 bg-white shadow-2xl rounded-xl">
@@ -204,7 +204,7 @@ const EmployeeList = () => {
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>
 
-            {/* General form errors (e.g., Network issues) */}
+            {}
             {fieldErrors.general && (
               <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded-md">
                 {fieldErrors.general}
@@ -232,11 +232,11 @@ const EmployeeList = () => {
                     className={`w-full p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 ${fieldErrors.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                     value={formData.email} onChange={(e) => {
                       setFormData({...formData, email: e.target.value});
-                      // Clear the specific error when user starts typing again
+                      
                       if (fieldErrors.email) setFieldErrors({...fieldErrors, email: null});
                     }} 
                   />
-                  {/* Inline Email Error */}
+                  {}
                   {fieldErrors.email && <p className="mt-1 text-xs text-red-500">{fieldErrors.email}</p>}
                 </div>
                 <div>
@@ -250,7 +250,7 @@ const EmployeeList = () => {
                       if (fieldErrors.phone_number) setFieldErrors({...fieldErrors, phone_number: null});
                     }} 
                   />
-                  {/* Inline Phone Error */}
+                  {}
                   {fieldErrors.phone_number && <p className="mt-1 text-xs text-red-500">{fieldErrors.phone_number}</p>}
                 </div>
               </div>

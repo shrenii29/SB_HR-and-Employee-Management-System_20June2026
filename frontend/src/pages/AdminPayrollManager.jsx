@@ -75,14 +75,14 @@ const getEmployeePayroll = (empId) => {
     e.preventDefault();
     setFieldErrors({});
     
-    // --- 1. NEW: STRICT MATH VALIDATION ---
+    
     let currentErrors = {};
     if (!formData.month_year) currentErrors.month_year = "Please select a month and year.";
     if (formData.basic_salary === '' || formData.basic_salary < 0) currentErrors.basic_salary = "Valid basic salary is required.";
     if (formData.allowances === '' || formData.allowances < 0) currentErrors.allowances = "Cannot be negative.";
     if (formData.deductions === '' || formData.deductions < 0) currentErrors.deductions = "Cannot be negative.";
 
-    // Check if net pay is negative
+    
     const netPayable = calculateNetPay(formData.basic_salary, formData.allowances, formData.deductions);
     if (netPayable < 0) {
         currentErrors.deductions = "Deductions cannot exceed total earnings!";
@@ -104,18 +104,18 @@ const getEmployeePayroll = (empId) => {
     };
 
 
-    setIsModalOpen(false); // Close the modal instantly for a snappy feel
+    setIsModalOpen(false); 
 
     try {
       const token = localStorage.getItem('token');
       await axios.post(`${import.meta.env.VITE_API_URL}/payroll/generate`, payload, { 
         headers: { Authorization: `Bearer ${token}` } 
       });
-      await fetchData();   // ← ADD THIS LINE
+      await fetchData();   
     } catch (err) {
       console.warn("Backend /payroll endpoint failed, but UI was updated locally.", err);
-      // In a production app we would show a toast error here, but for this project 
-      // we will let the UI persist so you can see your work.
+      
+      
     } finally {
       setIsSubmitting(false);
     }

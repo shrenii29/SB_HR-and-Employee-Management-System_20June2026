@@ -1,7 +1,7 @@
 const db = require('../config/db');
 
-// @desc    Get all departments
-// @route   GET /api/departments
+
+
 const getAllDepartments = async (req, res) => {
     try {
         const [departments] = await db.query('SELECT * FROM departments ORDER BY name ASC');
@@ -12,8 +12,8 @@ const getAllDepartments = async (req, res) => {
     }
 };
 
-// @desc    Create a new department
-// @route   POST /api/departments
+
+
 const createDepartment = async (req, res) => {
     try {
         const { name } = req.body;
@@ -26,7 +26,7 @@ const createDepartment = async (req, res) => {
         
         res.status(201).json({ message: 'Department created successfully.', departmentId: result.insertId });
     } catch (error) {
-        // Handle duplicate name errors
+        
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ message: 'Department already exists.' });
         }
@@ -35,8 +35,8 @@ const createDepartment = async (req, res) => {
     }
 };
 
-// @desc    Rename a department
-// @route   PUT /api/departments/:id
+
+
 const updateDepartment = async (req, res) => {
     try {
         const { id } = req.params;

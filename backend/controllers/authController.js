@@ -2,24 +2,24 @@ const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// @desc    Register a new user (Admin or Employee)
-// @route   POST /api/auth/register
+
+
 const register = async (req, res) => {
     try {
         const { first_name, last_name, email, password, role } = req.body;
 
-        // 1. Check if user already exists
+        
         const [existingUsers] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
         if (existingUsers.length > 0) {
             return res.status(400).json({ message: 'User with this email already exists.' });
         }
 
-        // 2. Hash the password securely
+        
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(password, salt);
 
-        // 3. Insert new user into the database
-        const userRole = role === 'Admin' ? 'Admin' : 'Employee'; // Default to Employee if invalid
+        
+        const userRole = role === 'Admin' ? 'Admin' : 'Employee'; 
         const [result] = await db.query(
             'INSERT INTO users (first_name, last_name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
             [first_name, last_name, email, password_hash, userRole]
@@ -32,8 +32,8 @@ const register = async (req, res) => {
     }
 };
 
-// @desc    Authenticate user & get token
-// @route   POST /api/auth/login
+
+
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;

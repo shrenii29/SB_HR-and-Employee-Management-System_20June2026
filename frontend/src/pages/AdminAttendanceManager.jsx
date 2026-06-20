@@ -7,7 +7,7 @@ const AdminAttendanceManager = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  // Default filter to today's date (YYYY-MM-DD)
+  
   const [dateFilter, setDateFilter] = useState(new Date().toLocaleDateString('en-CA'));
 
   const fetchData = useCallback(async () => {
@@ -15,7 +15,7 @@ const AdminAttendanceManager = () => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
-      // We only need one API call now because the backend JOINs the user data!
+      
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/attendance/all`, { headers });
       setAttendance(res.data);
     } catch (err) {
@@ -46,15 +46,15 @@ const AdminAttendanceManager = () => {
     }
   };
 
-  // Filter records by the selected date
+  
   const filteredAttendance = attendance.filter(record => {
     if (!record.punch_in) return false;
-    // Extract YYYY-MM-DD strictly in local time to prevent timezone jumps
+    
     const recordDate = new Date(record.punch_in).toLocaleDateString('en-CA');
     return recordDate === dateFilter;
   });
 
-  // Calculate quick stats for the filtered day
+  
   const stats = {
     present: filteredAttendance.filter(r => r.punch_out !== null).length,
     active: filteredAttendance.filter(r => r.punch_out === null).length,
@@ -64,7 +64,7 @@ const AdminAttendanceManager = () => {
   return (
     <div className="space-y-6">
       
-      {/* Header & Date Picker */}
+      {}
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="flex items-center gap-2 text-2xl font-bold text-gray-800">
@@ -85,7 +85,7 @@ const AdminAttendanceManager = () => {
         </div>
       </div>
 
-      {/* Daily Stats Summary */}
+      {}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="flex flex-col items-center p-4 bg-white border border-gray-200 shadow-sm rounded-xl">
           <span className="font-medium text-gray-500 text-sm">Active Now</span>
@@ -101,7 +101,7 @@ const AdminAttendanceManager = () => {
         </div>
       </div>
 
-      {/* Attendance Table */}
+      {}
       <div className="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl">
         {loading && <div className="p-8 text-center text-gray-500">Loading records...</div>}
         {error && <div className="p-4 m-6 text-red-700 border border-red-200 rounded-lg bg-red-50">{error}</div>}
@@ -127,7 +127,7 @@ const AdminAttendanceManager = () => {
                   </tr>
                 ) : (
                   filteredAttendance.map((record) => {
-                    // Auto-calculate total hours if both punches exist
+                    
                     let totalHours = '-';
                     if (record.punch_in && record.punch_out) {
                       const diffInMs = new Date(record.punch_out) - new Date(record.punch_in);

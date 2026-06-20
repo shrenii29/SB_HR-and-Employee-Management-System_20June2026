@@ -7,7 +7,7 @@ const EmployeeLeave = () => {
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   
-  // Form State
+  
   const [formData, setFormData] = useState({
     leave_type: 'Sick',
     start_date: '',
@@ -41,7 +41,7 @@ const EmployeeLeave = () => {
   const submitLeave = async (e) => {
     e.preventDefault();
     
-    // Quick validation to ensure end date isn't before start date
+    
     if (new Date(formData.end_date) < new Date(formData.start_date)) {
       showNotification("End date cannot be before start date.", "error");
       return;
@@ -55,10 +55,10 @@ const EmployeeLeave = () => {
       
       showNotification(res.data.message, 'success');
       
-      // Reset form
+      
       setFormData({ leave_type: 'Sick', start_date: '', end_date: '', reason: '' });
       
-      // Refresh the table
+      
       fetchHistory();
     } catch (err) {
       showNotification(err.response?.data?.error || "Failed to submit leave.", 'error');
@@ -91,7 +91,7 @@ const EmployeeLeave = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left Column: Apply Form */}
+        {}
         <div className="lg:col-span-1">
           <form onSubmit={submitLeave} className="p-6 bg-white border border-gray-200 shadow-sm rounded-xl">
             <h2 className="flex items-center gap-2 mb-6 text-lg font-bold text-gray-800">
@@ -159,7 +159,7 @@ const EmployeeLeave = () => {
           </form>
         </div>
 
-        {/* Right Column: History Table */}
+        {}
         <div className="lg:col-span-2">
           <div className="overflow-hidden bg-white border border-gray-200 shadow-sm rounded-xl">
             <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center gap-2">

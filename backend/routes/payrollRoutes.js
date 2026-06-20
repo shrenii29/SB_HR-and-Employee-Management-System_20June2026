@@ -3,7 +3,7 @@ const router = express.Router();
 const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware');
 const db = require('../config/db');
 
-// 1. EMPLOYEE: Get My Payslips
+
 router.get('/my-payroll', verifyToken, async (req, res) => {
     try {
         const sql = "SELECT * FROM payroll WHERE user_id = ? ORDER BY month_year DESC";
@@ -15,7 +15,7 @@ router.get('/my-payroll', verifyToken, async (req, res) => {
     }
 });
 
-// 2. ADMIN: Get ALL Organization Payroll Records
+
 router.get('/all', verifyAdmin, async (req, res) => {
     try {
         const sql = `
@@ -32,9 +32,9 @@ router.get('/all', verifyAdmin, async (req, res) => {
     }
 });
 
-// 3. ADMIN: Generate a New Payslip
-// 3. ADMIN: Generate a New Payslip (UPDATED WITH MATH)
-// 3. ADMIN: Generate or Edit a Payslip
+
+
+
 router.post('/generate', verifyAdmin, async (req, res) => {
     try {
         const { user_id, month_year, basic_salary, allowances, deductions } = req.body;

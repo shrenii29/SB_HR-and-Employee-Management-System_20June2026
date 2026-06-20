@@ -42,7 +42,7 @@ const AdminLeaveManager = () => {
       );
       
       showNotification(`Request marked as ${newStatus}`);
-      fetchRequests(); // Refresh table to show new status
+      fetchRequests(); 
     } catch (err) {
       showNotification("Failed to update status", 'error');
     }
@@ -121,7 +121,7 @@ const AdminLeaveManager = () => {
                         {getStatusBadge(record.status)}
                       </td>
                       <td className="p-4 text-right">
-                        {/* Only show action buttons if the request is still pending */}
+                        {}
                         {record.status === 'Pending' ? (
                           <div className="flex justify-end gap-2">
                             <button 

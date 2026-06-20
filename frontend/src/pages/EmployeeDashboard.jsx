@@ -13,7 +13,7 @@ const EmployeeDashboard = () => {
       try {
         const token = localStorage.getItem('token');
 
-        // -------- LEAVES --------
+        
         try {
           const leaveRes = await axios.get(
             `${import.meta.env.VITE_API_URL}/leave/my-leave-summary`,
@@ -25,7 +25,7 @@ const EmployeeDashboard = () => {
           console.error("Leave API failed", err);
         }
 
-        // -------- ATTENDANCE --------
+        
         try {
           const attRes = await axios.get(
             `${import.meta.env.VITE_API_URL}/attendance/my-attendance`,
@@ -58,7 +58,7 @@ const EmployeeDashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-        {/* STATUS */}
+        {}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
             <Clock size={24}/>
@@ -71,7 +71,7 @@ const EmployeeDashboard = () => {
           </div>
         </div>
 
-        {/* LEAVES */}
+        {}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="p-3 bg-purple-50 text-purple-600 rounded-lg">
             <CalendarDays size={24}/>
@@ -84,7 +84,7 @@ const EmployeeDashboard = () => {
           </div>
         </div>
 
-        {/* PAYDAY */}
+        {}
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
             <IndianRupee size={24}/>

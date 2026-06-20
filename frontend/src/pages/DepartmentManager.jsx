@@ -26,12 +26,12 @@ const DepartmentManager = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // --- ANALYTICS LOGIC ---
+  
   const getDeptStats = (deptId) => {
     const deptEmployees = employees.filter(e => e.department_id === deptId);
     return {
       total: deptEmployees.length,
-      onLeave: 0 // Placeholder logic for leave module
+      onLeave: 0 
     };
   };
 
@@ -66,7 +66,7 @@ const DepartmentManager = () => {
 
         {selectedDept ? (
           <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
-            {/* --- ANALYTICS SECTION --- */}
+            {}
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-blue-50 p-3 rounded-lg text-center">
                 <Users className="text-blue-600 mx-auto mb-1" size={20}/>
@@ -80,7 +80,7 @@ const DepartmentManager = () => {
               </div>
             </div>
 
-            {/* MANAGEMENT SECTION */}
+            {}
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-gray-800 text-sm uppercase">{selectedDept.name}</h3>
               {!isEditing && <button onClick={() => { setIsEditing(true); setRenameValue(selectedDept.name); }} className="text-blue-600"><Edit2 size={16}/></button>}
@@ -116,12 +116,12 @@ const DepartmentManager = () => {
           onClick={() => { setSelectedDept(dept); setIsEditing(false); }} 
           className={`px-6 py-4 cursor-pointer transition-colors flex justify-between items-center ${
             selectedDept?.id === dept.id 
-              ? 'bg-blue-50 border-l-4 border-blue-600' // Selected state
-              : 'hover:bg-gray-50 border-l-4 border-transparent' // Default state
+              ? 'bg-blue-50 border-l-4 border-blue-600' 
+              : 'hover:bg-gray-50 border-l-4 border-transparent' 
           }`}>
         <span className="font-medium text-gray-700">{dept.name}</span>
         <button 
-          onClick={(e) => { e.stopPropagation(); /* delete logic */ }}
+          onClick={(e) => { e.stopPropagation();  }}
           className="text-gray-400 hover:text-red-500 transition-colors"
         >
           <Trash2 size={18}/>

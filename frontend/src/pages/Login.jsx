@@ -14,20 +14,20 @@ const Login = () => {
     setError('');
 
     try {
-      // Call your backend API
+      
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
         email,
         password,
       });
 
-      // Save token and user info to local storage
+      
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
 
-      // Route the user based on their role
-      // Route the user based on their role
+      
+      
       if (response.data.user.role === 'Admin') {
-        navigate('/admin'); // Changed from '/admin-dashboard'
+        navigate('/admin'); 
       } else {
         navigate('/employee-dashboard');
       }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, NavLink, Outlet } from 'react-router-dom';
 import { 
   Users, Building2, CalendarOff, ClipboardCheck, 
-  CreditCard, LogOut, LayoutDashboard // <-- CreditCard icon is imported here
+  CreditCard, LogOut, LayoutDashboard 
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -38,7 +38,7 @@ const AdminDashboard = () => {
   return (
     <div className="flex h-screen bg-gray-100 font-sans">
       
-      {/* Fixed Sidebar */}
+      {}
       <aside className="w-64 flex flex-col shadow-xl bg-slate-900 text-white hidden md:flex">
         <div className="p-6 border-b border-slate-700">
           <h2 className="text-2xl font-bold tracking-wider text-blue-400">HR PORTAL</h2>
@@ -71,7 +71,7 @@ const AdminDashboard = () => {
             <span>Attendance</span>
           </NavLink>
 
-          {/* --- NEW: Payroll Link Added Here --- */}
+          {}
           <NavLink to="/admin/payroll" className={navLinkClasses}>
             <CreditCard size={20} />
             <span>Payroll</span>
@@ -98,7 +98,7 @@ const AdminDashboard = () => {
         </div>
       </aside>
 
-      {/* Main Dynamic Content Area */}
+      {}
       <main className="flex flex-col flex-1 overflow-hidden">
         <header className="flex items-center justify-between p-6 bg-white border-b border-gray-200 shadow-sm">
           <h1 className="text-2xl font-bold text-gray-800">Admin Portal</h1>

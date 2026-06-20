@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-// Admin Imports
+
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminOverview from './pages/AdminOverview';
@@ -11,7 +11,7 @@ import AdminAttendanceManager from './pages/AdminAttendanceManager';
 import AdminPayrollManager from './pages/AdminPayrollManager';
 
 
-// NEW Employee Imports
+
 import EmployeeLayout from './pages/EmployeeLayout';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import AttendancePage from './pages/AttendancePage';
@@ -24,10 +24,10 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Public Login Route */}
+        {}
         <Route path="/" element={<Login />} />
         
-        {/* Admin Route */}
+        {}
         <Route path="/admin" element={<AdminDashboard />}>
             <Route index element={<AdminOverview />} /> 
             <Route path="employees" element={<EmployeeList />} />
@@ -37,7 +37,7 @@ function App() {
             <Route path="payroll" element={<AdminPayrollManager />} /> 
         </Route>
 
-        {/* NEW Employee Route */}
+        {}
         <Route path="/employee-dashboard" element={<EmployeeLayout />}>
   <Route index element={<EmployeeDashboard />} />
   <Route path="attendance" element={<AttendancePage />} />
@@ -47,7 +47,7 @@ function App() {
   <Route path="edit-profile" element={<EditProfile />} />
 </Route>
 
-        {/* Catch-All */}
+        {}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

@@ -1,10 +1,10 @@
 const db = require('../config/db');
 
-// @desc    Get Admin Dashboard Analytics
-// @route   GET /api/dashboard/summary
+
+
 const getDashboardSummary = async (req, res) => {
     try {
-        // Run multiple queries concurrently for speed
+        
         const [employeeCount] = await db.query('SELECT COUNT(*) as count FROM users WHERE role = "Employee"');
         const [departmentCount] = await db.query('SELECT COUNT(*) as count FROM departments');
         const [pendingLeaves] = await db.query('SELECT COUNT(*) as count FROM leave_requests WHERE status = "Pending"');

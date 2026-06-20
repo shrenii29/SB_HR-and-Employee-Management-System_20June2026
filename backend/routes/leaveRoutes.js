@@ -3,12 +3,12 @@ const router = express.Router();
 const { verifyToken, verifyAdmin } = require('../middleware/authMiddleware');
 const db = require('../config/db');
 
-// 1. EMPLOYEE: Apply for Leave
+
 router.post('/apply', verifyToken, async (req, res) => {
     try {
         const { leave_type, start_date, end_date, reason } = req.body;
         
-        // Basic validation
+        
         if (!leave_type || !start_date || !end_date) {
             return res.status(400).json({ error: "Please provide leave type and dates." });
         }
@@ -23,7 +23,7 @@ router.post('/apply', verifyToken, async (req, res) => {
     }
 });
 
-// 2. EMPLOYEE: Get My Leave History
+
 router.get('/my-leaves', verifyToken, async (req, res) => {
     try {
         const sql = "SELECT * FROM leave_requests WHERE user_id = ? ORDER BY created_at DESC";
@@ -35,7 +35,7 @@ router.get('/my-leaves', verifyToken, async (req, res) => {
     }
 });
 
-// 3. ADMIN: Get ALL Leave Requests
+
 router.get('/all', verifyAdmin, async (req, res) => {
     try {
         const sql = `
@@ -52,11 +52,11 @@ router.get('/all', verifyAdmin, async (req, res) => {
     }
 });
 
-// 4. ADMIN: Update Leave Status (Approve/Reject)
+
 router.put('/update-status/:id', verifyAdmin, async (req, res) => {
     try {
         const leaveId = req.params.id;
-        const { status } = req.body; // Expects 'Approved' or 'Rejected'
+        const { status } = req.body; 
 
         if (!['Approved', 'Rejected'].includes(status)) {
             return res.status(400).json({ error: "Invalid status update." });

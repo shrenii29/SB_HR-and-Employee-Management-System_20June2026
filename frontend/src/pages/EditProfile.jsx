@@ -36,7 +36,7 @@ const EditProfile = () => {
   onChange={(e) => {
     const value = e.target.value;
 
-    // allow only digits
+    
     if (/^\d*$/.test(value)) {
       setPhone(value);
     }

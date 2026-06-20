@@ -1,11 +1,11 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 
-// @desc    Get all employees
-// @route   GET /api/employees
+
+
 const getAllEmployees = async (req, res) => {
     try {
-        // Fetch users who are not Admins, excluding their passwords
+        
         const [employees] = await db.query(
             'SELECT id, first_name, last_name, email, department_id, phone_number, created_at FROM users WHERE role = "Employee"'
         );
@@ -16,8 +16,8 @@ const getAllEmployees = async (req, res) => {
     }
 };
 
-// @desc    Update an employee record
-// @route   PUT /api/employees/:id
+
+
 const updateEmployee = async (req, res) => {
     try {
         const { id } = req.params;
@@ -39,8 +39,8 @@ const updateEmployee = async (req, res) => {
     }
 };
 
-// @desc    Delete an employee
-// @route   DELETE /api/employees/:id
+
+
 const deleteEmployee = async (req, res) => {
     try {
         const { id } = req.params;

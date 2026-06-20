@@ -1,18 +1,18 @@
 const db = require('../config/db');
 
-// ==============================
-// EMPLOYEE FUNCTIONS
-// ==============================
 
-// @desc    Mark attendance for today (Clock In)
-// @route   POST /api/attendance/mark
+
+
+
+
+
 const markAttendance = async (req, res) => {
     try {
         const user_id = req.user.id;
-        const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-        const current_time = new Date().toTimeString().split(' ')[0]; // Format: HH:MM:SS
+        const today = new Date().toISOString().split('T')[0]; 
+        const current_time = new Date().toTimeString().split(' ')[0]; 
 
-        // Check if attendance is already marked for today
+        
         const [existing] = await db.query(
             'SELECT * FROM attendance WHERE user_id = ? AND date = ?',
             [user_id, today]
@@ -34,8 +34,8 @@ const markAttendance = async (req, res) => {
     }
 };
 
-// @desc    Get logged-in employee's attendance history
-// @route   GET /api/attendance/my-attendance
+
+
 const getMyAttendance = async (req, res) => {
     try {
         const user_id = req.user.id;
@@ -52,12 +52,12 @@ const getMyAttendance = async (req, res) => {
     }
 };
 
-// ==============================
-// ADMIN FUNCTIONS
-// ==============================
 
-// @desc    Get all attendance records (with employee names)
-// @route   GET /api/attendance
+
+
+
+
+
 const getAllAttendance = async (req, res) => {
     try {
         const query = `
